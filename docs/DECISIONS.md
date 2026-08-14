@@ -141,3 +141,69 @@ the product its most important affordance.
 
 **Cost.** The interface is more restrained than a typical creator tool. That suits a
 document, which is what the output is.
+
+---
+
+## D8. Framing lowers a finding once, however many markers support it
+
+**Context.** Found by testing, not by design. The true crime fixture has a narrator
+who says "according to the coroner's report" and then "I am going to read this
+plainly" before a description of injuries. That trips the reporting rule and the
+quotation rule on the same passage.
+
+**Choice.** `capMitigation()` in `lib/engine/detect/context.ts` applies the first
+severity reduction and zeroes the arithmetic on every later one. The notes all
+survive.
+
+**Why.** Stacked, the two mitigations took a graphic description of injuries from
+severity 4 to severity 2 and cleared it on all three platforms. That is precisely the
+video a creator most needs warning about, and the tool would have told them it was
+safe. Two markers are two pieces of evidence for one fact, not two facts.
+
+**Cost.** A passage with genuinely layered justification gets no extra credit for the
+second layer. The notes are all still on the finding, so the appeal brief can argue
+from every one of them even though only one moved the number.
+
+**Where this shows now:** the true crime fixture reads limited on Instagram and
+cleared on YouTube and TikTok, because Instagram's published rule says graphic detail
+stays ineligible in a news context and the other two allow documentary treatment.
+`tests/clearing.test.ts` pins that difference.
+
+---
+
+## D9. The slur list is deliberately not vendored
+
+**Context.** A hate speech category needs terms, and a complete list of slurs is a
+known, published thing that could simply be pasted into `lib/engine/policy/lexicon.ts`.
+
+**Choice.** The `hate.directed` class ships with a seed of phrasing patterns rather
+than a slur list. The matching machinery is complete and does not change when the list
+grows.
+
+**Why.** Vendoring a slur list into a public repository puts it in every clone, every
+search index and every diff, for a build where the detection machinery is the
+interesting part and the list is not. An operator who needs full coverage extends the
+class from a maintained public list at deploy time.
+
+**Cost.** Out of the box, the hate category catches directed phrasing and not
+individual slurs, and that limit is stated rather than hidden. Any real deployment has
+to close it.
+
+---
+
+## D10. Transcript time units are decided per file, never per cue
+
+**Context.** Transcript libraries emit `start` in fractional seconds and `offset` in
+whole milliseconds, and `offset: 4000` is genuinely ambiguous: four seconds in one
+library, four thousand seconds in a sixty six minute video in another.
+
+**Choice.** `unitDivisor()` in `lib/engine/ingest/ytjson.ts` decides once for the whole
+file, using the field name plus whether every value is a whole number.
+
+**Why.** No value based rule settles the ambiguity, so the rule chosen matters less
+than where it is applied. A per cue guess would put the early cues of a long video on
+one scale and the later ones on another, and a creator would only find out after
+cutting the wrong second.
+
+**Cost.** A file that mixes both conventions is read on one scale. That file is
+malformed, and reading it consistently is better than reading it creatively.

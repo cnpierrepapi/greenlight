@@ -1,0 +1,107 @@
+# Instagram and Reels. Modelled on the content monetization policies rather
+# than the community standards, because the question a creator is asking here
+# is whether a Reel stays bonus and brand-partnership eligible.
+#
+# The distinctive rule encoded below: Instagram is stricter than YouTube about
+# sensitive events and about depictions of tragedy in the opening frames, and
+# more relaxed about occasional language.
+
+id: instagram
+label: Instagram
+version: "0.1.0"
+retrieved: "2026-08-14"
+source_url: https://creators.instagram.com/earn-money/content-monetization-policies
+source_title: Content Monetization Policies
+
+categories:
+  - id: language
+    label: Strong language
+    classes: [profanity.strong]
+    citation: >-
+      Content with excessive profanity may be ineligible for monetization.
+      Occasional profanity does not generally affect eligibility.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_findings: 4
+        reason: Excessive profanity across the runtime.
+      - level: cleared
+        reason: Profanity occasional, which stays eligible.
+
+  - id: violence
+    label: Violent and graphic content
+    classes: [violence.graphic, violence.descriptive]
+    citation: >-
+      Content that is gratuitously violent or that depicts injury in graphic
+      detail is ineligible for monetization, including in a news context.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_severity: 5
+        reason: Graphic depiction of injury.
+      # One is enough here, and that is the point of running three packs. The
+      # citation above says graphic detail is ineligible including in a news
+      # context, so documentary framing that saves a video on YouTube does not
+      # save it here.
+      - level: limited
+        min_severity: 3
+        min_findings: 1
+        reason: Graphic description of injury, which stays ineligible here even in a news context.
+      - level: cleared
+        reason: No graphic description of injury.
+
+  - id: sensitive
+    label: Tragedy and sensitive events
+    classes: [controversial.tragedy, selfharm]
+    citation: >-
+      Content that debates or depicts a tragedy or a sensitive event is
+      ineligible for monetization, including where the treatment is
+      educational or commemorative.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_findings: 1
+        reason: Any sustained discussion of a tragedy, which is ineligible here.
+      - level: cleared
+        reason: No discussion of a tragedy or sensitive event.
+
+  - id: hate
+    label: Hate speech
+    classes: [hate.directed]
+    citation: >-
+      Content that attacks people on the basis of a protected characteristic is
+      ineligible for monetization and may be removed.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_severity: 4
+        reason: Directed hostility toward a group.
+      - level: cleared
+        reason: Nothing directed at a protected group.
+
+  - id: adult
+    label: Adult content
+    classes: [sexual.explicit, sexual.suggestive]
+    citation: >-
+      Sexually explicit or suggestive content is ineligible for monetization.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_severity: 3
+        reason: Explicit sexual reference.
+      - level: cleared
+        reason: No explicit sexual content.
+
+  - id: drugs
+    label: Regulated goods
+    classes: [drugs.recreational]
+    citation: >-
+      Content depicting the use or sale of recreational drugs is ineligible for
+      monetization.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_findings: 1
+        reason: Recreational drug reference, which is ineligible here.
+      - level: cleared
+        reason: No recreational drug reference.

@@ -5,9 +5,10 @@ will cost the creator ad revenue, and what can be done about it. This document i
 written to be read cold by someone who has never seen the repo. It names real files
 and real functions so that every claim here can be checked against the code.
 
-Status: phase 0 complete. Sections marked **planned** describe modules that are
-designed but not yet written, and they are marked so nobody trusts a box that has no
-code behind it. Each phase updates this file at its close.
+Status: phases 0 and 1 complete. The engine runs end to end from a transcript to
+platform verdicts, with 40 tests passing. Sections marked **planned** describe modules
+that are designed but not yet written, and they are marked so nobody trusts a box that
+has no code behind it. Each phase updates this file at its close.
 
 ## The shape of the thing
 
@@ -17,16 +18,19 @@ greenlight/
   components/               planned, phase 3
   lib/engine/               pure TypeScript. no DOM, no network, no clock
     types.ts                the data contract for everything below
-    ingest/                 planned, phase 1: srt, vtt, ytjson, plaintext
-    transcript/             planned, phase 1: normalize any source to one shape
-    policy/                 planned, phase 1: pack loader and validation
-    detect/                 planned, phase 1: match, context, spans
-    score/                  planned, phase 1: thresholds to verdicts
+    ingest/                 subtitles.ts (srt + vtt), ytjson.ts, plaintext.ts, index.ts
+    transcript/normalize.ts any source to one Transcript, and the only place
+                            that decides a word's timing
+    policy/lexicon.ts       the terms that start a finding
+    policy/generated/       compiled packs. do not edit, run `npm run packs`
+    detect/                 match.ts, context.ts, spans.ts
+    score/verdict.ts        pack thresholds to verdicts
     docs/                   planned, phase 2: the four generators
-    index.ts                planned: the only surface the UI may import
+    index.ts                the only surface the UI may import
   lib/media/                planned, phase 4. browser only: decode, whisper worker
-  packs/                    planned, phase 1. YAML policy packs, authored by hand
-  scripts/build-packs.mjs   planned, phase 1. YAML to a typed module at build time
+  packs/                    youtube.yaml, tiktok.yaml, instagram.yaml
+  scripts/build-packs.mjs   YAML to a typed module at build time
+  tests/                    packs, ingest and end to end clearings
   fixtures/                 sample transcripts used by tests and by the demo
   brand/                    tokens.css and the logo files
   docs/                     this file and DECISIONS.md
@@ -93,26 +97,61 @@ rest run anywhere.
    *Subtitle route:* `lib/engine/ingest/srt.ts` and friends (planned) return the
    same `RawSegment[]`, which is why an SRT upload and a video upload produce
    reports of the same quality.
-3. **Normalize.** `lib/engine/transcript/normalize.ts` (planned) turns segments into
-   one `Transcript`. This is the only place that decides how a timed block becomes
-   individually timed tokens, and the only place that sets `Token.timing`.
-4. **Match.** `lib/engine/detect/match.ts` (planned) walks tokens against the
-   lexicon and emits `LexiconHit[]`.
-5. **Context.** `lib/engine/detect/context.ts` (planned) applies the judgements that
-   make this more than a keyword search: negation, quoted or reported speech, news
-   and educational framing, clinical versus directed use, density inside a window,
-   repetition, and position in the runtime. Each judgement appends a `Modifier` that
-   says what it saw and what it did.
-6. **Spans.** `lib/engine/detect/spans.ts` (planned) merges neighbouring hits into
-   `Finding[]`, attaches the quote from the creator's own words, and settles
-   severity and confidence.
-7. **Score.** `lib/engine/score/verdict.ts` (planned) evaluates each pack's
-   thresholds against the findings and returns `PlatformVerdict[]`. Thresholds live
-   in the pack YAML, not in this file, so tuning a platform never means editing
-   TypeScript.
+3. **Normalize.** `normalize()` in `lib/engine/transcript/normalize.ts` turns segments
+   into one `Transcript`. This is the only place that decides how a timed block
+   becomes individually timed tokens, and the only place that sets `Token.timing`. A
+   cue's duration is spread across its words by character position, and every token
+   produced that way is marked `inferred`.
+4. **Match.** `matchLexicon()` in `lib/engine/detect/match.ts` walks tokens against
+   the lexicon and emits `LexiconHit[]`. `dropOverlaps()` at the bottom of that file
+   keeps one hit where two entries cover the same words, so a single moment cannot be
+   counted twice by a threshold that counts findings.
+5. **Context.** `judge()` in `lib/engine/detect/context.ts` applies the judgements
+   that make this more than a keyword search: game play, reporting and documentary
+   framing, quotation, educational framing, negation, whether the word is directed at
+   a person, position in the runtime, and timing quality. Each appends a `Modifier`
+   saying what it saw and what it did. `capMitigation()` then makes sure framing
+   lowers a finding once however many markers support it, which is DECISIONS.md D8
+   and the single most load bearing line in the file.
+6. **Spans.** `buildFindings()` in `lib/engine/detect/spans.ts` merges hits into
+   `Finding[]`, attaches the quote from the creator's own words, and settles severity
+   and confidence. `groupHits()` keeps one open group per class rather than one
+   overall, because a narrator interleaves the act and the injuries in the same
+   breath and four alternating hits are one passage, not four offences.
+7. **Score.** `scoreAll()` in `lib/engine/score/verdict.ts` evaluates each pack's
+   thresholds against the findings and returns `PlatformVerdict[]`. Conditions on a
+   threshold are ANDed, thresholds are first match wins, and an opening window rule
+   does not fire at all on a transcript with no timings rather than guessing. No
+   policy judgement lives in this file.
 8. **Documents.** The four generators in `lib/engine/docs/` (planned) each take the
    `ClearingResult` and nothing else. That constraint is what guarantees the output
    describes this video rather than a template with the numbers swapped.
+
+## One clearing, worked through
+
+`fixtures/true-crime-hollow-lane.srt`, cleared by `clearText()` in
+`lib/engine/index.ts`. This is the walkthrough to read alongside the code.
+
+1. `ingestText()` sees the `.srt` extension and hands the file to
+   `parseSubtitles(text, 'srt')`, which returns 26 segments.
+2. `normalize()` produces roughly 500 tokens, all `inferred`, because a subtitle cue
+   times a line and not a word. `Transcript.exactTimings` is false.
+3. `matchLexicon()` hits on `assault`, `blunt object`, `injuries`, `impact sites` and
+   `defensive injuries` in the passage at 06:12, and on `unlawful killing` at 11:29.
+4. `groupHits()` folds those into three findings: one `violence.graphic` span of four
+   hits at 06:17, one `violence.descriptive` span of two at 06:19, and a single
+   `violence.descriptive` at 11:32.
+5. `judge()` finds reporting markers ("according to the coroner's report") and a
+   quotation marker ("I am going to read this") in the surrounding cues. Both are
+   recorded. `capMitigation()` lets the first one lower severity and zeroes the
+   second, so the graphic passage settles at severity 3 rather than 2.
+6. `scoreAll()` reads the three packs. Instagram's violence category fires at
+   `min_severity: 3, min_findings: 1` and returns **limited**. YouTube needs three
+   such findings and TikTok needs two, so both return **cleared**.
+
+The same cut, three different answers, each one traceable to a line in a YAML file.
+That is the product in one paragraph, and `tests/clearing.test.ts` pins every step of
+it.
 
 ## Policy packs
 

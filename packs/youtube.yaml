@@ -1,0 +1,125 @@
+# YouTube advertiser-friendly content guidelines.
+#
+# Editing this file: every category needs a citation and a source URL, and
+# citation_verbatim must be false unless the text is copied word for word from
+# the platform's own page. scripts/build-packs.mjs will refuse to build a pack
+# whose classes are not in the lexicon, so a typo cannot reach the demo.
+#
+# Thresholds are evaluated top to bottom and the first match wins, so they read
+# in the same order as the policy: worst case first, cleared last.
+
+id: youtube
+label: YouTube
+version: "0.1.0"
+retrieved: "2026-08-14"
+source_url: https://support.google.com/youtube/answer/6162278
+source_title: Advertiser-friendly content guidelines
+
+categories:
+  - id: language
+    label: Inappropriate language
+    classes: [profanity.strong, profanity.moderate, profanity.mild]
+    citation: >-
+      Strong profanity used in the opening seconds of a video, or used
+      frequently throughout, limits advertising. Moderate profanity used
+      occasionally is generally suitable for advertising.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_severity: 4
+        within_opening_sec: 30
+        reason: Strong language inside the opening 30 seconds.
+      - level: limited
+        min_severity: 4
+        min_findings: 3
+        reason: Strong language used repeatedly across the runtime.
+      - level: limited
+        min_findings: 8
+        reason: Sustained density of language across the runtime.
+      - level: cleared
+        reason: Language present but occasional, and not in the opening.
+
+  - id: violence
+    label: Violence
+    classes: [violence.descriptive, violence.graphic]
+    citation: >-
+      Violent content is unsuitable for advertising when it is gratuitous or
+      graphic. Violence in a news, educational or documentary context, or
+      violence that is part of standard video game play, may be suitable.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_severity: 5
+        reason: Graphic violent description at the top of the scale.
+      - level: limited
+        min_severity: 3
+        min_findings: 3
+        reason: Sustained description of violence against a person.
+      - level: cleared
+        reason: Violence referenced but not sustained or graphic.
+
+  - id: sensitive
+    label: Controversial issues and sensitive events
+    classes: [controversial.tragedy, selfharm]
+    citation: >-
+      Content that discusses a tragedy, a sensitive event, or self harm may be
+      unsuitable for advertising, including where the discussion is not
+      graphic. Educational, documentary and news treatments are assessed
+      differently from gratuitous ones.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_severity: 4
+        reason: Reference to self harm, which is handled strictly.
+      - level: limited
+        min_findings: 2
+        reason: Repeated reference to a tragedy or sensitive event.
+      - level: cleared
+        reason: Sensitive subject touched once, in context.
+
+  - id: hate
+    label: Hateful and derogatory content
+    classes: [hate.directed]
+    citation: >-
+      Content that promotes discrimination or disparages an individual or group
+      on the basis of a protected attribute is not suitable for advertising,
+      and may also breach community guidelines.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_severity: 4
+        reason: Directed hostility toward a group, which goes past ad suitability.
+      - level: cleared
+        reason: Nothing directed at a protected group.
+
+  - id: adult
+    label: Adult content
+    classes: [sexual.explicit, sexual.suggestive]
+    citation: >-
+      Sexually explicit content is not suitable for advertising. Non graphic
+      references, and discussion in an educational or documentary context, may
+      be suitable.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_severity: 3
+        min_findings: 2
+        reason: Repeated explicit sexual reference.
+      - level: cleared
+        reason: No sustained sexual content.
+
+  - id: drugs
+    label: Recreational drugs and drug related content
+    classes: [drugs.recreational, drugs.alcohol]
+    citation: >-
+      Content promoting or glorifying the sale or use of recreational drugs is
+      not suitable for advertising. Educational, recovery and news treatments
+      may be suitable.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_severity: 3
+        min_findings: 2
+        reason: Repeated recreational drug reference.
+      - level: cleared
+        reason: Drug reference absent or incidental.

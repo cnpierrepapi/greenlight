@@ -130,8 +130,18 @@ export interface PackCategory {
   label: string
   /** Lexicon classes that feed this category, e.g. 'profanity.strong'. */
   classes: string[]
-  /** The published text this category rests on. Quoted, never paraphrased. */
+  /** The published rule this category rests on. */
   citation: string
+  /**
+   * True only when `citation` is the platform's own wording, copied. False when
+   * it is our faithful summary of the published rule.
+   *
+   * This flag is not decoration. The appeal brief quotes a citation inside a
+   * formal document, and quoting a summary as if it were the platform's words
+   * would be the one mistake that discredits the whole output. When false, the
+   * generators introduce it as a summary and point at `sourceUrl` instead.
+   */
+  citationVerbatim: boolean
   /**
    * Where the line sits. Evaluated in order, first match wins, so a pack author
    * reads these top to bottom like the policy itself.

@@ -1,0 +1,106 @@
+# TikTok. Two things differ from YouTube and both are encoded below.
+#
+# 1. There is no advertiser self-certification, so the practical question is
+#    eligibility for the recommendation feed rather than ad suitability. A
+#    "limited" verdict here means the post is likely to be held out of For You,
+#    which costs reach rather than revenue.
+# 2. Language is treated far more leniently and placement in the opening is not
+#    the driver it is on YouTube, so no opening window rule is declared.
+
+id: tiktok
+label: TikTok
+version: "0.1.0"
+retrieved: "2026-08-14"
+source_url: https://www.tiktok.com/community-guidelines/en/content-moderation
+source_title: Community Guidelines and content eligibility standards
+
+categories:
+  - id: language
+    label: Strong language
+    classes: [profanity.strong]
+    citation: >-
+      Content with frequent strong language may be made ineligible for the For
+      You feed. Occasional strong language is generally eligible.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_findings: 5
+        reason: Frequent strong language across the runtime.
+      - level: cleared
+        reason: Language occasional, which is eligible.
+
+  - id: violence
+    label: Violent and graphic content
+    classes: [violence.graphic, violence.descriptive]
+    citation: >-
+      Gratuitous or shocking depictions of violence are removed. Documentary,
+      educational and news treatments are permitted with context, and may still
+      be held out of the recommendation feed.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_severity: 5
+        reason: Graphic violent description at the top of the scale.
+      - level: limited
+        min_severity: 3
+        min_findings: 2
+        reason: Sustained violent description, likely held out of For You.
+      - level: cleared
+        reason: No sustained violent description.
+
+  - id: selfharm
+    label: Suicide and self harm
+    classes: [selfharm]
+    citation: >-
+      Content depicting or describing suicide or self harm is removed, and
+      references are made ineligible for the recommendation feed even where the
+      intent is supportive.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_findings: 1
+        reason: Any reference to self harm, which is handled strictly here.
+      - level: cleared
+        reason: No reference to self harm.
+
+  - id: hate
+    label: Hate speech
+    classes: [hate.directed]
+    citation: >-
+      Content that attacks an individual or group on the basis of a protected
+      attribute is removed.
+    citation_verbatim: false
+    thresholds:
+      - level: strike
+        min_severity: 4
+        reason: Directed hostility toward a group.
+      - level: cleared
+        reason: Nothing directed at a protected group.
+
+  - id: adult
+    label: Sexually suggestive content
+    classes: [sexual.explicit, sexual.suggestive]
+    citation: >-
+      Sexually explicit content is removed. Suggestive content may be made
+      ineligible for the recommendation feed.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_severity: 3
+        reason: Explicit sexual reference.
+      - level: cleared
+        reason: No explicit sexual content.
+
+  - id: drugs
+    label: Regulated goods
+    classes: [drugs.recreational]
+    citation: >-
+      Content that depicts or promotes the use or trade of recreational drugs
+      is removed. Educational and recovery treatments are permitted.
+    citation_verbatim: false
+    thresholds:
+      - level: limited
+        min_findings: 2
+        reason: Repeated recreational drug reference.
+      - level: cleared
+        reason: Drug reference absent or incidental.

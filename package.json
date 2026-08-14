@@ -1,0 +1,29 @@
+{
+  "name": "greenlight",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monetization check for a cut you have already made.",
+  "scripts": {
+    "packs": "node scripts/build-packs.mjs",
+    "dev": "npm run packs && next dev",
+    "prebuild": "npm run packs",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "next": "^16.3.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
+  }
+}

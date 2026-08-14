@@ -1,0 +1,143 @@
+# Decisions
+
+Numbered, with the context, the choice, why, and what it cost. Appended to as the
+build goes, never rewritten after the fact.
+
+---
+
+## D1. One Next app at the repo root, not a monorepo
+
+**Context.** The engine is pure TypeScript and the UI is React. The textbook answer
+is a workspace with `packages/engine` and `apps/web`.
+
+**Choice.** A single Next application at the repo root. The engine lives at
+`lib/engine/` and its boundary is enforced by folder structure and a single barrel
+export, not by a package manifest.
+
+**Why.** Vercel deploys a root application with zero configuration. A workspace
+setup would have cost an hour of build config to buy an import boundary that a
+folder and a barrel already give. The properties that actually matter, that the
+engine is DOM free, network free and unit testable in node, come from discipline
+about what the engine imports, not from a package boundary.
+
+**Cost.** Nothing stops a careless import of a React module into `lib/engine`. That
+is a review problem rather than a build error. If the engine is ever published on
+its own, this has to be revisited.
+
+---
+
+## D2. No language model in the critical path
+
+**Context.** The obvious 2026 build is to hand the transcript to a model and ask it
+what is risky.
+
+**Choice.** Deterministic detection: a lexicon, declarative rules in YAML, and
+context modifiers written as code with a stated rationale for each judgement.
+
+**Why.** Three reasons, in the order they matter.
+
+1. Every finding must be traceable to a published policy line, because that trace is
+   the entire basis of the appeal brief. A model that says a passage feels risky
+   gives a creator nothing to file.
+2. Same input, same output, every run. That is what makes a live demo safe and what
+   makes golden output tests meaningful.
+3. No API key and no server, so anyone can run the whole product offline. That was a
+   hard requirement.
+
+**Cost.** No detection of implied meaning, and it will not catch sarcasm or a
+euphemism that is not in the lexicon. Greenlight will miss things a model would
+catch. The trade accepted here is being right about what it claims over guessing
+broadly and being unable to show its work.
+
+---
+
+## D3. Transcription runs in the browser, not on a server
+
+**Context.** Whisper needs to run somewhere. A server endpoint would be simpler to
+write and faster on a weak laptop.
+
+**Choice.** transformers.js in a Web Worker, on the creator's machine. WebGPU when
+available, wasm when not.
+
+**Why.** No API key means anyone can demo it, which was the requirement that shaped
+the whole product. It also makes the privacy claim real rather than a policy
+promise: the video file never leaves the machine, so there is no upload, no storage,
+and no retention question to answer. And it keeps hosting cost at zero, which
+matters for something that has to stay up after the event without a bill attached.
+
+**Cost.** A model download on first use, and transcription speed depends on the
+visitor's hardware. Mitigated by shipping the sample cuts with precomputed
+transcripts, so the full product can be seen without downloading anything. That
+mitigation is also demo insurance: if the model CDN is slow or blocked on the
+judge's network, nothing about the demonstration breaks.
+
+---
+
+## D4. Policy packs are YAML data, compiled at build time
+
+**Context.** Platform rules change, and they need correcting by whoever notices,
+which will not always be a programmer.
+
+**Choice.** Hand authored YAML in `packs/`, validated and compiled to a typed module
+by `scripts/build-packs.mjs`, run from `prebuild` and `dev`.
+
+**Why.** Correcting a rule stays a one line diff that a non programmer can read and
+check against the platform's own page. Validation at build time means a malformed
+pack fails the build, not the demo. Compiling to a module rather than fetching YAML
+at runtime keeps the browser path simple and typed, with no loader and no fetch.
+
+**Cost.** A build step that has to be remembered. It is wired into `dev` and
+`prebuild` so that forgetting it is not possible in the normal flow.
+
+---
+
+## D5. No database, no accounts
+
+**Context.** Reports could be saved, shared, and compared over time.
+
+**Choice.** A clearing lives in the browser tab that produced it, and leaves as a
+downloaded pack.
+
+**Why.** Accounts are the single biggest thing standing between a stranger and
+seeing the product work, and the brief was that anyone can demo it. Storing creators'
+transcripts also creates a retention question that the browser only design avoids
+entirely.
+
+**Cost.** No history, no cross device access, and a shareable report link needs
+something else later. Acceptable for now, and it is an additive change rather than a
+rewrite.
+
+---
+
+## D6. Suppressed findings are kept, not discarded
+
+**Context.** When context clears a match, the tidy instinct is to drop it.
+
+**Choice.** It stays, flagged with `Finding.suppressed`, with the modifier trail that
+cleared it.
+
+**Why.** It is the evidence that the video was reviewed and the passage was
+considered. The report shows it as considered and cleared, which is what makes the
+tool feel like a review rather than a filter, and the appeal brief cites it when
+arguing that a treatment was non gratuitous. It costs almost nothing to keep and
+cannot be reconstructed later.
+
+**Cost.** A slightly larger result object and one more state the UI has to render
+without cluttering the main findings list.
+
+---
+
+## D7. Signal colour is reserved for verdicts
+
+**Context.** Green, amber and red are the natural brand palette for a product about
+approval.
+
+**Choice.** They appear only on verdicts, stamps and timeline bands. Page chrome is
+ink and paper. The accent green is used for the mark and links, nothing else.
+
+**Why.** The report has to be readable at a glance, and that only works if a
+saturated colour on screen always means one thing. A green button would quietly cost
+the product its most important affordance.
+
+**Cost.** The interface is more restrained than a typical creator tool. That suits a
+document, which is what the output is.

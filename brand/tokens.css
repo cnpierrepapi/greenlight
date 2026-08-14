@@ -1,0 +1,98 @@
+/* Greenlight colour theme.
+   Rule that holds the whole system together: green, amber and red mean exactly
+   one thing each. They appear on verdicts, stamps and timeline bands only.
+   Nothing decorative wears a signal colour. Chrome is ink and paper. */
+
+:root {
+  /* ground and surfaces */
+  --gl-ground: #DCDED7;
+  --gl-panel: #F6F7F3;
+  --gl-panel-2: #EAEBE4;
+
+  /* text */
+  --gl-ink: #141819;
+  --gl-ink-soft: #4C5457;
+  --gl-ink-faint: #767E7F;
+
+  /* lines */
+  --gl-rule: #C2C6BC;
+  --gl-rule-hard: #9AA096;
+
+  /* brand. the tally lamp. mark and cleared state only */
+  --gl-accent: #0E7A3E;
+  --gl-accent-soft: #D6E8DC;
+
+  /* signals */
+  --gl-clear: #147F45;
+  --gl-clear-bg: #D3E7DA;
+  --gl-limit: #9A6A05;
+  --gl-limit-bg: #EFE2C4;
+  --gl-strike: #A32E27;
+  --gl-strike-bg: #EFD8D5;
+
+  --gl-shadow: 0 1px 0 rgba(20, 24, 25, .06), 0 12px 28px -18px rgba(20, 24, 25, .5);
+
+  /* type */
+  --gl-serif: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", "Hoefler Text", Georgia, serif;
+  --gl-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --gl-ground: #0E1214;
+    --gl-panel: #171C1E;
+    --gl-panel-2: #101517;
+
+    --gl-ink: #E3E6E0;
+    --gl-ink-soft: #9BA29F;
+    --gl-ink-faint: #6E7775;
+
+    --gl-rule: #293134;
+    --gl-rule-hard: #3C4649;
+
+    --gl-accent: #2BD07A;
+    --gl-accent-soft: #16311F;
+
+    --gl-clear: #46D68C;
+    --gl-clear-bg: #12291C;
+    --gl-limit: #E0A72E;
+    --gl-limit-bg: #2B2210;
+    --gl-strike: #E76A5F;
+    --gl-strike-bg: #2E1715;
+
+    --gl-shadow: 0 1px 0 rgba(0, 0, 0, .4), 0 18px 34px -22px rgba(0, 0, 0, .9);
+  }
+}
+
+:root[data-theme="dark"] {
+  --gl-ground: #0E1214;
+  --gl-panel: #171C1E;
+  --gl-panel-2: #101517;
+
+  --gl-ink: #E3E6E0;
+  --gl-ink-soft: #9BA29F;
+  --gl-ink-faint: #6E7775;
+
+  --gl-rule: #293134;
+  --gl-rule-hard: #3C4649;
+
+  --gl-accent: #2BD07A;
+  --gl-accent-soft: #16311F;
+
+  --gl-clear: #46D68C;
+  --gl-clear-bg: #12291C;
+  --gl-limit: #E0A72E;
+  --gl-limit-bg: #2B2210;
+  --gl-strike: #E76A5F;
+  --gl-strike-bg: #2E1715;
+
+  --gl-shadow: 0 1px 0 rgba(0, 0, 0, .4), 0 18px 34px -22px rgba(0, 0, 0, .9);
+}
+
+html { color-scheme: light dark; }
+
+body {
+  background: var(--gl-ground);
+  color: var(--gl-ink);
+  font-family: var(--gl-serif);
+}

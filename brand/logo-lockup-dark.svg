@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 64" width="340" height="64" role="img" aria-label="Greenlight">
+  <title>Greenlight</title>
+  <rect width="64" height="64" rx="7" fill="#0A0D0E" stroke="#293134" stroke-width="1"/>
+  <circle cx="32" cy="32" r="20.5" fill="none" stroke="#2BD07A" stroke-opacity=".28" stroke-width="2"/>
+  <circle cx="32" cy="32" r="13" fill="#2BD07A"/>
+  <path d="M7.5 32h5M51.5 32h5" stroke="#DCDED7" stroke-opacity=".45" stroke-width="2" stroke-linecap="square"/>
+  <text x="86" y="44" font-family="Palatino Linotype, Book Antiqua, Palatino, Iowan Old Style, Hoefler Text, Georgia, serif"
+        font-size="34" letter-spacing="1.2" fill="#E3E6E0">GREEN<tspan fill="#9BA29F">LIGHT</tspan></text>
+</svg>

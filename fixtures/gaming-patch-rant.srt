@@ -1,0 +1,135 @@
+1
+00:00:00,400 --> 00:00:03,100
+Right, so the patch dropped last night and I have thoughts.
+
+2
+00:00:03,100 --> 00:00:06,900
+And this absolute damn nightmare of a patch has broken the one thing that worked.
+
+3
+00:00:07,000 --> 00:00:11,400
+Before we get into it, yes, I did read the notes. All fourteen pages of them.
+
+4
+00:00:11,400 --> 00:00:15,200
+So let me walk you through what actually changed, and then what it means for ranked.
+
+5
+00:00:15,200 --> 00:00:19,000
+First up, the shotgun. They cut the damage falloff range by about a third.
+
+6
+00:00:19,100 --> 00:00:23,800
+Which sounds small until you realise every close quarters fight is now a coin flip.
+
+7
+00:00:24,000 --> 00:00:28,400
+Here, watch this clip. I hit him twice in the chest at four metres and he walks away.
+
+8
+00:00:28,400 --> 00:00:32,000
+Two shots. Centre mass. He turns around and kills me with a pistol.
+
+9
+00:00:32,100 --> 00:00:35,600
+Now I want to be fair, because there was a real problem they were fixing.
+
+10
+00:00:35,600 --> 00:00:40,200
+The shotgun was oppressive on the smaller maps. Everybody agreed on that much.
+
+11
+00:00:40,300 --> 00:00:44,900
+But you do not fix an oppressive gun by making it useless, you fix it by tuning it.
+
+12
+00:00:45,000 --> 00:00:49,300
+Second change, and this is the one nobody is talking about, the audio occlusion.
+
+13
+00:00:49,300 --> 00:00:53,700
+Footsteps through a wall now sound the same as footsteps in the room with you.
+
+14
+00:00:53,800 --> 00:00:58,100
+So the entire skill of listening, the thing that separates good players from great ones, is gone.
+
+15
+00:02:14,200 --> 00:02:18,600
+Alright, back from the break. Let's look at the ranked data since Tuesday.
+
+16
+00:02:18,600 --> 00:02:23,100
+Win rate on the shotgun has fallen from fifty one percent to thirty eight.
+
+17
+00:02:23,200 --> 00:02:27,400
+That is not a nerf, that is a deletion. They removed a weapon from the game.
+
+18
+00:04:52,000 --> 00:04:56,300
+Somebody in the comments asked whether I think this was deliberate, and honestly, no.
+
+19
+00:04:56,400 --> 00:05:01,000
+I think a junior on that team changed one number and nobody play tested it properly.
+
+20
+00:05:01,000 --> 00:05:05,400
+Which is a process problem, not a malice problem, and those get fixed.
+
+21
+00:07:30,100 --> 00:07:34,800
+Now the part that actually annoyed me. The support response.
+
+22
+00:07:34,900 --> 00:07:39,600
+I sat in a queue for two hours and got a copy paste answer about server regions.
+
+23
+00:07:39,600 --> 00:07:43,200
+Two hours. For a message that did not read my question at all.
+
+24
+00:07:43,300 --> 00:07:47,900
+And look, I know the person on the other end is doing their job with the tools they were given.
+
+25
+00:07:48,000 --> 00:07:52,400
+That is not on them. That is on whoever decided one person covers a million players.
+
+26
+00:09:51,000 --> 00:09:55,700
+They shipped it broken, damn near unplayable, and then went quiet for four days.
+
+27
+00:09:55,800 --> 00:10:00,200
+Four days of no acknowledgement while the subreddit set itself on fire.
+
+28
+00:10:00,300 --> 00:10:04,900
+A two line post on day one saying we see it, we are looking, would have cost them nothing.
+
+29
+00:11:40,000 --> 00:11:44,600
+So where does that leave us. Do not grind ranked this week, it is not worth the frustration.
+
+30
+00:11:44,700 --> 00:11:49,100
+Play the casual playlist, mess about with the marksman rifle, wait for the hotfix.
+
+31
+00:12:30,000 --> 00:12:34,800
+If you found this useful, the full patch breakdown is in the description with timestamps.
+
+32
+00:12:34,900 --> 00:12:39,400
+And if you disagree with me on the shotgun, genuinely, leave a comment, I read them.
+
+33
+00:13:10,000 --> 00:13:14,200
+Thanks for watching, I will see you when the hotfix lands. Probably angrier.
+
+34
+00:13:14,300 --> 00:13:18,000
+Take it easy.

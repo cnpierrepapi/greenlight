@@ -1,0 +1,46 @@
+/* Layout primitives only. Every colour comes from brand/tokens.css, so nothing
+   in the app hardcodes a hex and the dark pass is not a second design. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--gl-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gl-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.gl-mono {
+  font-family: var(--gl-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.gl-label {
+  font-family: var(--gl-mono);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gl-ink-faint);
+}

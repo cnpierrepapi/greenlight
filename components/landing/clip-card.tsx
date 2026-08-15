@@ -81,7 +81,7 @@ export function ClipCard({ clip, index }: { clip: LandingClip; index: number }) 
 
   return (
     <article className="clip" style={{ ['--i' as string]: String(index) }}>
-      <div className="clip-frame">
+      <div className="clip-frame" style={{ ['--poster' as string]: `url(${clip.poster})` }}>
         <video
           ref={videoRef}
           className="clip-video"

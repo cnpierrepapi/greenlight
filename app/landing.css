@@ -234,6 +234,23 @@
   border-bottom: 1px solid var(--edge);
 }
 
+/* The whole waveform, sitting under the moving one.
+   The `poster` attribute alone was not enough: once the video has buffered,
+   browsers drop the poster and show frame one, and frame one of a waveform is
+   silence, which is a black rectangle. This paints a loud frame of the same
+   waveform underneath instead, so the card always shows a voice. When the video
+   is playing, screen blending lets the live trace sit over the static one, and
+   the pair read as a track with a position in it. */
+.landing .clip-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--poster);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.32;
+}
+
 .landing .clip-video {
   position: absolute;
   inset: 0;

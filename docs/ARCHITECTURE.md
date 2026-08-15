@@ -5,7 +5,7 @@ will cost the creator ad revenue, and what can be done about it. This document i
 written to be read cold by someone who has never seen the repo. It names real files
 and real functions so that every claim here can be checked against the code.
 
-Status: phases 0, 1 and 4 complete. Phase 4, transcription, was pulled forward ahead
+Status: phases 0, 1, 3 and 4 complete. Only the four document generators remain. Phase 4, transcription, was pulled forward ahead
 of the documents and the full UI because it held every real unknown in the project
 (DECISIONS.md D11). A video now goes in one end and platform verdicts come out the
 other, verified in a browser: an 11 second clip decodes, transcribes on WebGPU with
@@ -178,6 +178,28 @@ finding count, a minimum severity, an optional opening window, and a human sente
 If a platform rule cannot be expressed in those fields, the honest move is to add a
 field and document it here, not to bury the logic in TypeScript where a reader
 cannot see it.
+
+## The bench
+
+`components/bench.tsx` owns the whole client flow and is the only component that
+calls into `lib/media` and `lib/engine`. Everything under it renders a
+`ClearingResult` and nothing else. `components/clearing.tsx` holds the one piece of
+state the panels share, which finding is selected, because the point of the layout is
+that the four views agree: click a band on the strip and the transcript scrolls to it,
+the finding card opens, and the video seeks to the second it happened. Four panels
+each holding their own idea of the selection is how that stops being true.
+
+| Component | Job |
+| --- | --- |
+| `components/timeline.tsx` | full bleed risk strip. bands sorted so the worst level paints last, because findings overlap in time and the last band drawn is the one a creator sees |
+| `components/verdicts.tsx` | one card per platform, cleared categories collapsed to a count so the two that matter are not buried under eighteen green rows |
+| `components/transcript-rail.tsx` | the transcript, scrolled to the selection. finds its anchor by query rather than by ref, and lets CSS animate the scroll |
+| `components/findings.tsx` | findings grouped into passages by `groupIntoPassages()` in `lib/ui/format.ts` |
+
+`lib/ui/format.ts` holds the presentation rules that are logic rather than styling.
+`levelForFinding()` is the join that keeps the strip honest: a band is coloured by the
+verdict it actually drove, read back from the platform verdicts, so the strip can
+never disagree with the cards above it. `tests/ui.test.ts` pins that.
 
 ## What is deliberately absent
 

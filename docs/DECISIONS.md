@@ -248,3 +248,38 @@ Greenlight ships.
 **Cost.** `npm audit` is not clean, so anybody running it has to know why. That is what
 this entry is for. If transformers.js is ever imported from server code, this decision
 is void and has to be revisited.
+
+---
+
+## D13. Three bench bugs the tests could not have caught
+
+**Context.** The engine has 62 tests and all of them passed while the interface was
+telling a creator the wrong thing. Recording this because the lesson is about where to
+look, not about the three fixes.
+
+**What the browser found.**
+
+1. **Bands overlapping on the strip.** Findings overlap in time, so their bands overlap
+   too, and the last one drawn wins. In transcript order that was whichever came
+   second, so a grey cleared band painted over the amber one underneath it and hid the
+   only finding on the strip that had changed a verdict. `PAINT_ORDER` in
+   `components/timeline.tsx` now draws the worst level last.
+2. **Passages grouped on quote text grouped nothing.** The first version of
+   `groupIntoPassages()` compared quote strings. Two findings over the same sentence
+   rarely quote the same thing, because one span reaches across four cues and the other
+   across one. Grouping is by overlapping token range now, and the widest quote is
+   shown since it contains the others.
+3. **`scrollTo({ behavior: 'smooth' })` silently did nothing.** Clicking a band left
+   the transcript exactly where it was. An instant scroll to the same offset worked, so
+   the arithmetic was right and the animation was swallowing the call. The animation is
+   CSS on `.rail-scroll` now, so the rail lands even where a browser declines to
+   animate.
+
+**Why it matters.** All three are failures of presentation over a correct result, and
+the whole product is a presentation of a correct result. A unit test cannot see a band
+painted over another band. Driving the real interface in a real browser is not a final
+check on this build, it is the only way to test the half of it that a creator actually
+looks at.
+
+**Cost.** Browser verification is slower than a test run and cannot be left to CI as it
+stands. Worth it.

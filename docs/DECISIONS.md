@@ -286,6 +286,57 @@ stands. Worth it.
 
 ---
 
+## D16. The transcription estimate is a projection and says so
+
+**Context.** A transcription with no time estimate is the worst part of using this.
+Whisper runs at roughly one times realtime on an ordinary laptop, so a thirteen minute
+video is thirteen minutes of a bar that does not move.
+
+**Choice.** `lib/media/transcribe.ts` projects the total from how fast this machine went
+last time, stored in `localStorage`. The interface counts down from it and says "about".
+When the projection runs out and the work is still going, it stops counting and says it
+is running long, with elapsed time instead.
+
+**Why.** transformers.js builds every 30 second window up front and loops through them
+inside a single call, exposing no per window hook. A first version passed a
+`chunk_callback` that does not exist in that version, so it never fired and the
+countdown ran against nothing: it reached zero and sat there saying "any second now"
+while five minutes of audio was still being transcribed. Nothing here can honestly claim
+to know how far through it is, so it does not claim to.
+
+**Cost.** The first run on a machine is a guess, and says so. Runs under 45 seconds do
+not update the stored speed, because a short clip is mostly fixed startup cost and
+timing one made this laptop look several times slower than it is.
+
+**Measured:** a five minute clip projected 4m48s and took 5m05s.
+
+---
+
+## D17. What the landing page cost, in bugs
+
+**Context.** Recorded for the same reason as D13. Everything here was found by opening
+the page, and none of it would have shown up in a test.
+
+1. **A 60fps render loop aborted the media load.** The clip cards read the video clock in
+   `requestAnimationFrame` and re-rendered on every frame. Four of those on one page left
+   every video at `readyState 0` with no error to explain it. It polls eight times a
+   second now, which is more than the bubbles need.
+2. **Pausing on `!isIntersecting` froze every clip.** One transient callback during mount
+   paused them, and no further callback ever came to undo it. It pauses on
+   `intersectionRatio === 0` instead.
+3. **`.strip` collided across two global stylesheets.** app.css owns `.strip` for the
+   timeline with `height: 34px`. The landing declared its own for the clip section, so
+   the section collapsed to 181px and the cards spilled through the section below.
+   Landing CSS is scoped under `.landing` and the section is `.lp-clips`.
+4. **The `poster` attribute was not enough.** Browsers drop the poster once the video
+   buffers and show frame one, and frame one of a waveform is silence, which is black.
+   A loud frame is painted behind the video instead.
+
+**The pattern worth keeping:** every one of these presented as "nothing is happening"
+with no error anywhere. On this build, silence is the failure mode to go looking for.
+
+---
+
 ## D14. The appeal brief refuses to argue a losing point
 
 **Context.** The obvious appeal generator takes a decision and produces the strongest

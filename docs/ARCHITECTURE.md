@@ -19,7 +19,10 @@ has no code behind it. Each phase updates this file at its close.
 ```
 greenlight/
   app/                      routes and UI. no rules logic lives here
-  components/               planned, phase 3
+    page.tsx landing.css    the landing page at /
+    clear/page.tsx          the app at /clear
+  components/               bench, clearing, timeline, verdicts, rail, findings,
+                            pack-panel, and landing/
   lib/engine/               pure TypeScript. no DOM, no network, no clock
     types.ts                the data contract for everything below
     ingest/                 subtitles.ts (srt + vtt), ytjson.ts, plaintext.ts, index.ts
@@ -208,6 +211,26 @@ finding count, a minimum severity, an optional opening window, and a human sente
 If a platform rule cannot be expressed in those fields, the honest move is to add a
 field and document it here, not to bury the logic in TypeScript where a reader
 cannot see it.
+
+## Routes
+
+| Route | File | What it is |
+| --- | --- | --- |
+| `/` | `app/page.tsx` + `app/landing.css` | the landing page. dark committed, cyan accent, real clips |
+| `/clear` | `app/clear/page.tsx` | the app. renders `components/bench.tsx` and nothing else |
+
+The landing page runs on recorded output, not on live analysis.
+`components/landing/clips.ts` holds the transcript lines, timecodes, flagged terms and
+verdicts that Greenlight produced when those three clips were cleared for real, and
+`public/clips/` holds waveform videos rendered from the same clips' audio with ffmpeg
+`showwaves`. It is a recording rather than an illustration, which also means it can go
+stale: change the packs or the lexicon and this file is wrong until somebody re-runs the
+clips through `/clear` and updates it.
+
+`components/landing/clip-card.tsx` follows the video's own `currentTime` so a word
+lights up on the frame it was said, and falls back to its own clock when a browser
+refuses to autoplay. Every landing selector is scoped under `.landing`. See DECISIONS.md
+D17 for why that scoping is not optional.
 
 ## The bench
 

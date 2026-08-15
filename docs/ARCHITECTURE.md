@@ -5,8 +5,11 @@ will cost the creator ad revenue, and what can be done about it. This document i
 written to be read cold by someone who has never seen the repo. It names real files
 and real functions so that every claim here can be checked against the code.
 
-Status: phases 0 and 1 complete. The engine runs end to end from a transcript to
-platform verdicts, with 40 tests passing. Sections marked **planned** describe modules
+Status: phases 0, 1 and 4 complete. Phase 4, transcription, was pulled forward ahead
+of the documents and the full UI because it held every real unknown in the project
+(DECISIONS.md D11). A video now goes in one end and platform verdicts come out the
+other, verified in a browser: an 11 second clip decodes, transcribes on WebGPU with
+per word timings, and clears in about twelve seconds. 51 tests pass. Sections marked **planned** describe modules
 that are designed but not yet written, and they are marked so nobody trusts a box that
 has no code behind it. Each phase updates this file at its close.
 
@@ -87,16 +90,25 @@ lost the most valuable evidence in the system.
 Numbered so it can be followed in the code. Steps 1 and 2 are browser only, the
 rest run anywhere.
 
-1. **File in.** `lib/media/decode.ts` (planned) reads the dropped file through the
-   Web Audio API and returns 16kHz mono PCM. Containers that Chrome cannot decode
-   are named at this point and the SRT route is offered, rather than failing later
-   and blaming the file.
-2. **Speech to text.** `lib/media/whisper.worker.ts` (planned) runs Whisper through
-   transformers.js inside a Web Worker so the main thread keeps painting. Returns
-   `RawSegment[]`. Nothing is uploaded.
-   *Subtitle route:* `lib/engine/ingest/srt.ts` and friends (planned) return the
-   same `RawSegment[]`, which is why an SRT upload and a video upload produce
-   reports of the same quality.
+1. **File in.** `decodeToPcm()` in `lib/media/decode.ts` reads the dropped file with
+   the Web Audio API and returns 16kHz mono PCM. There is no ffmpeg and no server: the
+   browser already holds a demuxer and every codec it supports, and using it is what
+   keeps the promise that the file never leaves the machine. The cost is that support
+   is Chrome's rather than ffmpeg's, so most of that module is spent naming what it
+   cannot open. MKV, AVI, WMV and FLV are refused by name with the subtitle route
+   offered, rather than failing later and blaming the file.
+2. **Speech to text.** `lib/media/whisper.worker.ts` runs Whisper through
+   transformers.js inside a Web Worker so the main thread keeps painting the progress
+   bar. `transcribe()` in `lib/media/transcribe.ts` is the only module that knows the
+   worker exists, and it owns two judgements: device choice, where WebGPU is tried and
+   wasm is the fallback including when WebGPU fails at runtime, and whether the
+   timings that came back are per word or per chunk. That second one is measured from
+   the output by `looksWordLevel()` rather than assumed from the request, because
+   transformers.js honours `return_timestamps: 'word'` for most models and quietly
+   falls back for others. It decides whether the cut list is accurate to the word or
+   to the line, and it is carried to the report instead of being papered over.
+   *Subtitle route:* `lib/engine/ingest/` returns the same `RawSegment[]`, which is
+   why a subtitle upload and a video upload reach identical code from here on.
 3. **Normalize.** `normalize()` in `lib/engine/transcript/normalize.ts` turns segments
    into one `Transcript`. This is the only place that decides how a timed block
    becomes individually timed tokens, and the only place that sets `Token.timing`. A

@@ -207,3 +207,44 @@ cutting the wrong second.
 
 **Cost.** A file that mixes both conventions is read on one scale. That file is
 malformed, and reading it consistently is better than reading it creatively.
+
+---
+
+## D11. Transcription was pulled forward ahead of the documents and the UI
+
+**Context.** The plan had transcription as the last build phase. It is the core path
+and it holds every real unknown in the project: word level timestamps, container
+decode, model weight, WebGPU availability. Everything scheduled ahead of it was work
+whose outcome was already known.
+
+**Choice.** Built it fourth in the plan and first in practice, before the document
+generators and before the full bench.
+
+**Why.** Risk order, not dependency order. If word timestamps had not worked, the
+honest fallback changes what the cut list can promise, and that is a thing to discover
+with two days left rather than two hours. It went the other way: `Xenova/whisper-tiny.en`
+returns per word timings, WebGPU is picked up when present, and a clip transcribes and
+clears in about twelve seconds on this machine.
+
+**Cost.** The bench UI was built twice, once thin to prove the path and again properly
+in phase 3. That was the cheaper mistake to risk.
+
+---
+
+## D12. The onnxruntime-node and sharp advisories are accepted, not fixed
+
+**Context.** `npm audit` reports four high severity advisories, all reached through
+`@huggingface/transformers`: `adm-zip` via `onnxruntime-node`, and `libvips` via
+`sharp`. Neither has a fix available upstream.
+
+**Choice.** Kept, and recorded here rather than silenced.
+
+**Why.** Both are node side backends of transformers.js. Greenlight only ever loads the
+library inside a browser Web Worker, where the wasm and WebGPU backends are used and
+neither package is bundled or executed. `sharp` is for server side image decoding,
+which this product does not do at all. Neither advisory is reachable from anything
+Greenlight ships.
+
+**Cost.** `npm audit` is not clean, so anybody running it has to know why. That is what
+this entry is for. If transformers.js is ever imported from server code, this decision
+is void and has to be revisited.

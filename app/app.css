@@ -44,3 +44,380 @@ a {
   text-transform: uppercase;
   color: var(--gl-ink-faint);
 }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Page. The masthead runs 60/40 rather than centred, and the bench below it is
+   full width, so the video is the only thing that spans edge to edge.
+   --------------------------------------------------------------------------- */
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 56px) 120px;
+}
+
+.masthead {
+  padding: clamp(36px, 5vw, 68px) 0 clamp(28px, 4vw, 48px);
+}
+
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.wordmark {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+
+.wordmark span {
+  color: var(--gl-ink-soft);
+}
+
+.thesis {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: start;
+  margin-top: clamp(28px, 4vw, 48px);
+}
+
+.thesis h1 {
+  margin: 0;
+  font-size: clamp(30px, 4.6vw, 54px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.thesis p {
+  margin: 0;
+  color: var(--gl-ink-soft);
+  max-width: 46ch;
+}
+
+@media (max-width: 860px) {
+  .thesis {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* --- drop zone ----------------------------------------------------------- */
+
+.bench {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.drop {
+  border: 1px dashed var(--gl-rule-hard);
+  background: var(--gl-panel);
+  padding: clamp(32px, 5vw, 60px) 28px;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.drop-active {
+  border-color: var(--gl-accent);
+  background: var(--gl-accent-soft);
+}
+
+.drop-title {
+  margin: 0;
+  font-size: clamp(20px, 2.4vw, 26px);
+  letter-spacing: -0.01em;
+}
+
+.drop-note {
+  margin: 8px auto 0;
+  color: var(--gl-ink-soft);
+  font-size: 15px;
+  max-width: 56ch;
+}
+
+.drop-button {
+  margin-top: 20px;
+  font-family: var(--gl-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 11px 22px;
+  background: transparent;
+  color: var(--gl-ink);
+  border: 1px solid var(--gl-rule-hard);
+  cursor: pointer;
+}
+
+.drop-button:hover {
+  border-color: var(--gl-ink);
+}
+
+.working {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.bar {
+  width: min(420px, 100%);
+  height: 6px;
+  margin-top: 16px;
+  border: 1px solid var(--gl-rule-hard);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--gl-accent);
+  transition: width 0.2s linear;
+}
+
+.bar-indeterminate {
+  width: 34%;
+  animation: sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  0% {
+    margin-left: -34%;
+  }
+  100% {
+    margin-left: 100%;
+  }
+}
+
+.error {
+  margin: 0;
+  border-left: 3px solid var(--gl-strike);
+  background: var(--gl-strike-bg);
+  padding: 14px 18px;
+  font-size: 15px;
+}
+
+/* --- samples ------------------------------------------------------------- */
+
+.samples {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sample-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.sample {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: 16px 18px;
+  background: var(--gl-panel);
+  border: 1px solid var(--gl-rule);
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+}
+
+.sample:hover {
+  border-color: var(--gl-rule-hard);
+}
+
+.sample-title {
+  font-size: 16px;
+}
+
+.sample-note {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--gl-ink-soft);
+}
+
+/* --- results ------------------------------------------------------------- */
+
+.result {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: clamp(20px, 3vw, 44px);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .result {
+    grid-template-columns: 1fr;
+  }
+}
+
+.verdicts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 24px;
+}
+
+.verdict {
+  border: 1px solid var(--gl-rule);
+  background: var(--gl-panel);
+  padding: 16px 18px;
+}
+
+.verdict header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.verdict-name {
+  font-size: 18px;
+}
+
+.stamp {
+  font-family: var(--gl-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+}
+
+.level-cleared .stamp {
+  color: var(--gl-clear);
+}
+
+.level-limited .stamp {
+  color: var(--gl-limit);
+}
+
+.level-strike .stamp {
+  color: var(--gl-strike);
+}
+
+.verdict ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.verdict li {
+  display: flex;
+  gap: 9px;
+  align-items: baseline;
+}
+
+.verdict strong {
+  font-weight: 400;
+}
+
+.all-clear {
+  color: var(--gl-ink-soft);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-limited {
+  background: var(--gl-limit);
+}
+
+.dot-strike {
+  background: var(--gl-strike);
+}
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.finding {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr);
+  gap: 14px;
+  border-top: 1px solid var(--gl-rule);
+  padding-top: 14px;
+}
+
+.finding-muted {
+  opacity: 0.72;
+}
+
+.finding-time {
+  font-size: 13px;
+  color: var(--gl-ink-faint);
+  padding-top: 2px;
+}
+
+.finding-quote {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.finding-meta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--gl-ink-faint);
+}
+
+.finding-why {
+  margin: 10px 0 0;
+  padding-left: 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--gl-ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.considered summary {
+  font-family: var(--gl-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gl-ink-faint);
+  cursor: pointer;
+  padding: 10px 0;
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--gl-ink-faint);
+}

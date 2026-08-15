@@ -24,6 +24,7 @@ import { Timeline } from './timeline'
 import { Verdicts } from './verdicts'
 import { TranscriptRail } from './transcript-rail'
 import { Findings } from './findings'
+import { PackPanel } from './pack-panel'
 
 export interface MediaSource {
   url: string
@@ -35,9 +36,11 @@ interface ClearingProps {
   result: ClearingResult
   media: MediaSource | null
   note: string | null
+  /** What the clearing came from, media file or subtitle file or sample. */
+  sourceName: string | null
 }
 
-export function Clearing({ result, media, note }: ClearingProps) {
+export function Clearing({ result, media, note, sourceName }: ClearingProps) {
   const [selected, setSelected] = useState<Finding | null>(null)
   const [playheadSec, setPlayheadSec] = useState<number | null>(null)
   const playerRef = useRef<HTMLVideoElement | HTMLAudioElement>(null)
@@ -111,6 +114,8 @@ export function Clearing({ result, media, note }: ClearingProps) {
         />
         <Findings result={result} selectedId={selected?.id ?? null} onSelect={select} />
       </div>
+
+      <PackPanel result={result} sourceName={sourceName} mediaName={media?.name ?? null} />
 
       <footer className="clearing-foot">
         {note && <p className="note">{note}</p>}

@@ -283,3 +283,51 @@ looks at.
 
 **Cost.** Browser verification is slower than a test run and cannot be left to CI as it
 stands. Worth it.
+
+---
+
+## D14. The appeal brief refuses to argue a losing point
+
+**Context.** The obvious appeal generator takes a decision and produces the strongest
+possible argument against it. That is what a creator asks for and it is the wrong
+product.
+
+**Choice.** `assessAgreement()` in `lib/engine/docs/appeal.ts` compares the platform's
+decision against our own verdict for the category the platform named. When this
+video's own findings support the decision, no grounds are asserted: Part III says so in
+terms and Part V asks for written identification of the timecodes relied upon so a
+conforming edit can be prepared and resubmitted.
+
+**Why.** Reviewers see a lot of appeals. A creator who files a confident argument
+against a decision the evidence plainly supports is a creator whose next appeal is read
+with less care. The tool's value is that its documents are worth reading, and that only
+holds if it declines to write one when writing one would hurt.
+
+**Cost.** Sometimes the answer is "we agree with them", which is not what the person
+clicking the button wanted. It is what they needed, and it still gives them the useful
+half: a request for the specific timecodes, which is the thing platforms rarely
+volunteer and which turns a dead end into an edit.
+
+**Verified in the browser:** Instagram limits the true crime fixture, our own reading
+agrees, and the generated brief asserts no grounds. YouTube clears the same passage, so
+a YouTube limitation on the same video produces a brief with three grounds.
+`tests/documents.test.ts` pins both directions.
+
+---
+
+## D15. The appeal brief is not in the pack
+
+**Context.** Four documents are offered as a set. The brief could have been the fifth
+button.
+
+**Choice.** `buildPack()` returns the three documents plus the self-cert. The brief
+comes from `buildAppeal()`, behind a form that asks what happened, which platform, and
+what reason was given.
+
+**Why.** A brief generated before anything has gone wrong is a document arguing against
+a decision nobody has made. Putting it in the pack would invite a creator to file it,
+and the reason the platform gave is also what selects the operative provision, so the
+brief is materially worse without it.
+
+**Cost.** One more click at the moment a creator is most annoyed. That is the right
+moment to slow down.

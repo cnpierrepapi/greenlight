@@ -764,6 +764,120 @@ main {
   max-width: 62ch;
 }
 
+/* --- the pack ------------------------------------------------------------ */
+
+.pack {
+  border: 1px solid var(--gl-rule);
+  background: var(--gl-panel-2);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pack-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pack-note {
+  font-size: 14px;
+  color: var(--gl-ink-soft);
+}
+
+.pack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.doc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--gl-panel);
+  border: 1px solid var(--gl-rule);
+}
+
+.doc-button {
+  font-family: var(--gl-mono);
+  font-size: 12.5px;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--gl-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+}
+
+.doc-blurb {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--gl-ink-soft);
+}
+
+.appeal {
+  border-top: 1px solid var(--gl-rule);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.appeal-toggle {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 16px;
+  color: var(--gl-ink);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.appeal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field select,
+.field input,
+.field textarea {
+  font-family: inherit;
+  font-size: 15px;
+  padding: 9px 11px;
+  background: var(--gl-panel);
+  color: var(--gl-ink);
+  border: 1px solid var(--gl-rule-hard);
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
 .clearing-foot {
   display: flex;
   flex-direction: column;

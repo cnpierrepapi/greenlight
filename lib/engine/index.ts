@@ -71,6 +71,12 @@ export function clearText(filename: string, text: string, options: ClearOptions)
   return clearSegments(segments, source, options)
 }
 
+export { buildPack, buildAppeal, type Document, type PackOptions } from './docs/pack'
+export { renderReport } from './docs/report'
+export { renderSelfCert } from './docs/selfcert'
+export { buildCutRanges, renderFfmpeg, renderEdl } from './docs/cutlist'
+export { docTime, shortTime, edlTime } from './docs/format'
+export { renderAppeal, type AppealContext, type AppealDecision } from './docs/appeal'
 export { PACKS } from './policy/generated/packs'
 export { LEXICON, KNOWN_CLASSES } from './policy/lexicon'
 export { ingestText } from './ingest'

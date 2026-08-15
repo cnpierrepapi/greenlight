@@ -5,7 +5,8 @@ will cost the creator ad revenue, and what can be done about it. This document i
 written to be read cold by someone who has never seen the repo. It names real files
 and real functions so that every claim here can be checked against the code.
 
-Status: phases 0, 1, 3 and 4 complete. Only the four document generators remain. Phase 4, transcription, was pulled forward ahead
+Status: all build phases complete. A video goes in one end and four documents come
+out the other. Phase 4, transcription, was pulled forward ahead
 of the documents and the full UI because it held every real unknown in the project
 (DECISIONS.md D11). A video now goes in one end and platform verdicts come out the
 other, verified in a browser: an 11 second clip decodes, transcribes on WebGPU with
@@ -28,7 +29,7 @@ greenlight/
     policy/generated/       compiled packs. do not edit, run `npm run packs`
     detect/                 match.ts, context.ts, spans.ts
     score/verdict.ts        pack thresholds to verdicts
-    docs/                   planned, phase 2: the four generators
+    docs/                   report.ts, cutlist.ts, selfcert.ts, appeal.ts, pack.ts
     index.ts                the only surface the UI may import
   lib/media/                planned, phase 4. browser only: decode, whisper worker
   packs/                    youtube.yaml, tiktok.yaml, instagram.yaml
@@ -135,9 +136,38 @@ rest run anywhere.
    threshold are ANDed, thresholds are first match wins, and an opening window rule
    does not fire at all on a transcript with no timings rather than guessing. No
    policy judgement lives in this file.
-8. **Documents.** The four generators in `lib/engine/docs/` (planned) each take the
-   `ClearingResult` and nothing else. That constraint is what guarantees the output
-   describes this video rather than a template with the numbers swapped.
+8. **Documents.** The generators in `lib/engine/docs/` each take the `ClearingResult`
+   and nothing else. That constraint is what guarantees the output describes this
+   video rather than a template with the numbers swapped.
+
+## The four documents
+
+| File | Module | What it is |
+| --- | --- | --- |
+| `report.html` | `docs/report.ts` | every finding, the rule it trips, and what was considered and cleared. inline CSS and no scripts, so it opens from a folder with no network in six months |
+| `cutlist.sh` | `docs/cutlist.ts` | a runnable ffmpeg command that mutes the ranges and copies the video stream untouched |
+| `cutlist.edl` | `docs/cutlist.ts` | the same ranges as a CMX3600 EDL of what survives a trim. a different remedy from the mute, and the header says which is which |
+| `selfcert.md` | `docs/selfcert.ts` | the advertiser questionnaire answered from the transcript, with the timecodes behind each answer |
+| `appeal.md` | `docs/appeal.ts` | generated only once a decision exists. numbered exhibits from this video, quoted, with a stated remedy |
+
+Three rules hold across all of them.
+
+**The cut list only touches what actually cost something.** A finding no platform
+counted is real, is in the report, and is not worth editing a video over.
+`findingsThatCost()` in `docs/format.ts` is the filter, and `tests/documents.test.ts`
+pins it against the gaming fixture, which has findings and no cuts.
+
+**Nothing is answered that Greenlight cannot see.** It reads what is said, never what
+is shown, so `docs/selfcert.ts` lists the questions about imagery unanswered rather
+than guessing them from speech. A wrong self-certification answer costs a creator more
+than a missing one.
+
+**The appeal brief will not argue a losing point.** `assessAgreement()` in
+`docs/appeal.ts` compares the platform's decision against our own verdict for the
+category it names. When this video's evidence supports the decision, Part III says the
+determination is not asserted to be in error and Part V asks for the timecodes relied
+upon so a conforming edit can be prepared. A tool that generated confident nonsense
+appeals would get creators ignored, and would deserve to be.
 
 ## One clearing, worked through
 

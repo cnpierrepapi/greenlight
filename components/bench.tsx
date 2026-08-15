@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 /**
  * The drop zone and the state machine behind it.
@@ -27,7 +27,13 @@ import { Clearing, type MediaSource } from './clearing'
 type Stage =
   | { name: 'idle' }
   | { name: 'working'; label: string; detail: string; ratio: number | null }
-  | { name: 'done'; result: ClearingResult; media: MediaSource | null; note: string | null }
+  | {
+      name: 'done'
+      result: ClearingResult
+      media: MediaSource | null
+      note: string | null
+      sourceName: string
+    }
   | { name: 'error'; message: string }
 
 const SAMPLES = [
@@ -78,6 +84,7 @@ export function Bench() {
             name: 'done',
             result,
             media: null,
+            sourceName: file.name,
             note: 'Cleared from a subtitle file, so timecodes are accurate to the line. Drop the video in for word level timings.',
           })
           return
@@ -131,6 +138,7 @@ export function Bench() {
             kind: file.type.startsWith('video/') ? 'video' : 'audio',
             name: file.name,
           },
+          sourceName: file.name,
           note: transcription.wordTimestamps
             ? `Transcribed on this machine on the ${where}, with per word timings. Nothing was uploaded.`
             : `Transcribed on this machine on the ${where}. This model returned timings per line rather than per word, so timecodes are accurate to the line. Nothing was uploaded.`,
@@ -161,6 +169,7 @@ export function Bench() {
           name: 'done',
           result,
           media: null,
+          sourceName: file,
           note: 'Sample cut, cleared from its subtitle file. Drop your own video in to see the word level path.',
         })
       } catch (error) {
@@ -247,7 +256,14 @@ export function Bench() {
         </section>
       )}
 
-      {stage.name === 'done' && <Clearing result={stage.result} media={stage.media} note={stage.note} />}
+      {stage.name === 'done' && (
+        <Clearing
+          result={stage.result}
+          media={stage.media}
+          note={stage.note}
+          sourceName={stage.sourceName}
+        />
+      )}
     </div>
   )
 }
@@ -266,3 +282,4 @@ function Working({ stage }: { stage: Extract<Stage, { name: 'working' }> }) {
     </div>
   )
 }
+

@@ -81,6 +81,14 @@ self.addEventListener('message', async (event: MessageEvent<TranscribeRequest>) 
       note: 'Reading the audio.',
     })
 
+    // No per window progress is reported here, and that is not an oversight.
+    // transformers.js builds every 30 second window up front and then loops
+    // through them inside one call, with no hook exposed. An earlier version of
+    // this file passed a `chunk_callback` that does not exist in this version,
+    // so it silently never fired and the interface counted down against
+    // nothing. The honest signal is elapsed time against this machine's
+    // measured speed, and that lives in transcribe.ts where it can be labelled
+    // as the projection it is.
     const output = await transcriber(request.pcm, {
       // 30 second windows with a 5 second overlap is Whisper's own training
       // shape. The overlap is what stops a word being cut in half at a window

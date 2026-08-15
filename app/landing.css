@@ -1,0 +1,578 @@
+/* The landing page.
+
+   Every selector is scoped under .landing, and that is not tidiness. app.css is
+   global and already owns a class called .strip for the timeline in the app,
+   with height: 34px on it. This file used to declare its own .strip for the
+   clip section, so the two collided: the section collapsed to 181px and the
+   clip cards spilled out underneath the section that follows. The clip section
+   is .lp-clips now, and scoping everything means the next name I reuse cannot
+   do the same thing again.
+
+   Two design decisions worth knowing. This page commits to dark rather than
+   following the viewer's theme, because the whole design rests on a bright
+   signal against a near black ground and there is no honest light version of
+   that. And the bright colour is cyan, not green: green, amber and red still
+   mean cleared, limited and removed here exactly as they do inside the app, so
+   the chrome is not allowed to borrow them. */
+
+.landing {
+  --void: #07090a;
+  --deep: #0d1113;
+  --panel: #12181a;
+  --edge: #1d2629;
+  --bone: #e8ece9;
+  --soft: #8f9b98;
+  --faint: #626e6c;
+
+  /* The landing accent. Emphasis and calls to action, never a verdict. */
+  --hot: #2fe3e8;
+  --hot-deep: #0b6d72;
+
+  --clear: #46d68c;
+  --limit: #ffb020;
+  --strike: #ff6a5c;
+
+  position: relative;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: var(--void);
+  color: var(--bone);
+  overflow-x: clip;
+}
+
+.landing section,
+.landing > header {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: clamp(18px, 4vw, 56px);
+}
+
+/* One ambient movement on the page, not five. */
+.landing .glow {
+  position: absolute;
+  top: -18vh;
+  left: 50%;
+  width: min(1300px, 130vw);
+  aspect-ratio: 1;
+  translate: -50% 0;
+  background: radial-gradient(circle, rgba(47, 227, 232, 0.16), rgba(47, 227, 232, 0) 62%);
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 0;
+  animation: gl-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes gl-drift {
+  from {
+    translate: -54% -3%;
+    opacity: 0.75;
+  }
+  to {
+    translate: -46% 4%;
+    opacity: 1;
+  }
+}
+
+/* --- top bar -------------------------------------------------------------- */
+
+.landing .lp-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-block: 22px;
+}
+
+.landing .wordmark {
+  font-size: 22px;
+  margin: 0;
+}
+
+.landing .wordmark span {
+  color: var(--soft);
+}
+
+.landing .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--gl-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 12px 22px;
+  text-decoration: none;
+  border: 1px solid var(--edge);
+  color: var(--bone);
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.landing .btn-ghost:hover {
+  border-color: var(--hot);
+  color: var(--hot);
+}
+
+.landing .btn-hot {
+  background: var(--hot);
+  border-color: var(--hot);
+  color: #04191a;
+  font-weight: 600;
+}
+
+.landing .btn-hot:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -12px rgba(47, 227, 232, 0.7);
+}
+
+.landing .btn-big {
+  font-size: 14px;
+  padding: 18px 34px;
+}
+
+/* --- hero ----------------------------------------------------------------- */
+
+.landing .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(30px, 5vw, 72px);
+  align-items: center;
+  padding-block: clamp(36px, 6vw, 84px) clamp(48px, 8vw, 104px);
+}
+
+@media (max-width: 940px) {
+  .landing .hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.landing .eyebrow {
+  font-family: var(--gl-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--hot);
+  margin: 0 0 22px;
+}
+
+.landing h1 {
+  margin: 0;
+  font-size: clamp(34px, 4.6vw, 60px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 400;
+  text-wrap: balance;
+  max-width: 20ch;
+}
+
+.landing h1 .hot {
+  color: var(--hot);
+}
+
+.landing .hero-sub {
+  margin: 26px 0 0;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.55;
+  color: var(--soft);
+  max-width: 48ch;
+}
+
+.landing .hero-cta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.landing .hero-note {
+  font-size: 14px;
+  color: var(--faint);
+}
+
+.landing .hero-stage {
+  perspective: 1400px;
+}
+
+/* --- clip card ------------------------------------------------------------ */
+
+.landing .clip {
+  --tilt: 7deg;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, var(--panel), var(--deep));
+  border: 1px solid var(--edge);
+  transform: perspective(1400px) rotateY(calc(var(--tilt) * -1)) rotateX(2deg);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 40px 80px -50px rgba(0, 0, 0, 0.95);
+}
+
+.landing .clip-grid .clip:nth-child(even) {
+  transform: perspective(1400px) rotateY(var(--tilt)) rotateX(2deg);
+}
+
+.landing .clip:hover,
+.landing .clip:focus-within {
+  transform: perspective(1400px) rotateY(0deg) rotateX(0deg) translateY(-6px);
+}
+
+.landing .hero-stage .clip {
+  --tilt: 10deg;
+}
+
+.landing .clip-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  border-bottom: 1px solid var(--edge);
+}
+
+.landing .clip-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+  /* The waveform is drawn on black. Screen blending drops the black and leaves
+     only the trace, so the card's own gradient shows through it. */
+  mix-blend-mode: screen;
+}
+
+.landing .clip-bubbles {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 7px;
+  padding: 14px;
+}
+
+.landing .bubble {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  align-self: flex-start;
+  max-width: 94%;
+  padding: 8px 13px;
+  font-size: clamp(12.5px, 1.05vw, 15px);
+  line-height: 1.35;
+  background: rgba(7, 9, 10, 0.9);
+  border: 1px solid var(--edge);
+  border-left: 2px solid var(--hot);
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  filter: blur(2px);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 0.35s ease;
+}
+
+.landing .bubble-live {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+.landing .bubble-limited {
+  border-left-color: var(--limit);
+}
+
+.landing .bubble-strike {
+  border-left-color: var(--strike);
+}
+
+.landing .bubble-at {
+  font-family: var(--gl-mono);
+  font-size: 10.5px;
+  color: var(--faint);
+  flex: none;
+}
+
+.landing .flag {
+  display: inline-block;
+  padding: 1px 7px;
+  background: transparent;
+  color: var(--limit);
+  border: 1px solid currentColor;
+  font-family: var(--gl-mono);
+  font-size: 0.86em;
+  animation: gl-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.landing .flag-strike {
+  color: var(--strike);
+}
+
+@keyframes gl-pop {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.landing .clip-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--hot);
+  transform-origin: left;
+}
+
+.landing .clip-body {
+  padding: 20px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.landing .clip-body h3 {
+  margin: 0;
+  font-size: clamp(18px, 1.6vw, 22px);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.landing .clip-strap {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--soft);
+}
+
+.landing .clip-finding {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 13px 0;
+  border-block: 1px solid var(--edge);
+}
+
+.landing .clip-finding dt {
+  font-family: var(--gl-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.landing .clip-finding dd {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  color: var(--bone);
+  word-break: break-word;
+}
+
+.landing .clip-verdicts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.landing .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border: 1px solid var(--edge);
+  font-size: 13px;
+}
+
+.landing .chip strong {
+  font-family: var(--gl-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.landing .chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.landing .chip-cleared .chip-dot {
+  background: var(--clear);
+}
+.landing .chip-cleared strong {
+  color: var(--clear);
+}
+.landing .chip-limited .chip-dot {
+  background: var(--limit);
+}
+.landing .chip-limited strong {
+  color: var(--limit);
+}
+.landing .chip-strike .chip-dot {
+  background: var(--strike);
+}
+.landing .chip-strike strong {
+  color: var(--strike);
+}
+
+/* --- clip section --------------------------------------------------------- */
+
+.landing .lp-clips {
+  padding-block: clamp(48px, 7vw, 92px);
+  border-top: 1px solid var(--edge);
+}
+
+.landing .lp-clips-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 60px);
+  align-items: end;
+  margin-bottom: clamp(28px, 4vw, 44px);
+}
+
+@media (max-width: 860px) {
+  .landing .lp-clips-head {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.landing h2 {
+  margin: 0;
+  font-size: clamp(26px, 3.2vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.028em;
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.landing .lp-clips-head p {
+  margin: 0;
+  color: var(--soft);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.landing .clip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(318px, 1fr));
+  gap: clamp(16px, 2.4vw, 28px);
+  perspective: 1600px;
+}
+
+/* --- steps ---------------------------------------------------------------- */
+
+.landing .steps {
+  padding-block: clamp(48px, 7vw, 92px);
+  border-top: 1px solid var(--edge);
+}
+
+.landing .steps ol {
+  list-style: none;
+  margin: clamp(26px, 4vw, 44px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: clamp(18px, 3vw, 38px);
+}
+
+.landing .steps li {
+  border-top: 1px solid var(--edge);
+  padding-top: 18px;
+}
+
+/* The numbers are a real sequence: it listens, then checks, then writes. */
+.landing .step-n {
+  font-family: var(--gl-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--hot);
+}
+
+.landing .steps h3 {
+  margin: 12px 0 8px;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.landing .steps p {
+  margin: 0;
+  color: var(--soft);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* --- the honest bit ------------------------------------------------------- */
+
+.landing .honest {
+  padding-block: clamp(48px, 7vw, 88px);
+  border-top: 1px solid var(--edge);
+}
+
+.landing .honest > div {
+  max-width: 62ch;
+  border-left: 2px solid var(--hot-deep);
+  padding-left: clamp(18px, 3vw, 32px);
+}
+
+.landing .honest p {
+  margin: 18px 0 0;
+  color: var(--soft);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* --- close ---------------------------------------------------------------- */
+
+.landing .close {
+  padding-block: clamp(56px, 9vw, 112px);
+  border-top: 1px solid var(--edge);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.landing .close h2 {
+  max-width: 18ch;
+}
+
+.landing .close-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--faint);
+}
+
+.landing .close-note a {
+  color: var(--soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .glow,
+  .landing .flag {
+    animation: none;
+  }
+  .landing .clip,
+  .landing .bubble,
+  .landing .btn {
+    transition: none;
+  }
+}

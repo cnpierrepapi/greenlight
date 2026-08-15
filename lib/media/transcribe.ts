@@ -41,12 +41,78 @@ export interface TranscribeOptions {
   model?: ModelChoice
   onProgress?: (progress: TranscribeProgress) => void
   signal?: AbortSignal
+  /** Runtime of the audio. Without it there is no ETA, only a spinner. */
+  durationSec?: number
 }
 
 export interface TranscribeProgress {
   stage: 'model' | 'transcribe'
   ratio: number | null
   note: string
+  /**
+   * How long the whole transcription is projected to take, in seconds, or null
+   * when there is nothing to base that on.
+   *
+   * A projection, not a measurement, and the interface says so. transformers.js
+   * exposes no per window hook, so nothing can honestly claim to know how far
+   * through it is. What it can do is know how fast this machine went last time
+   * and say "about". When the projection runs out and the work is still going,
+   * the interface stops counting down and says it is taking longer, because a
+   * countdown stuck on zero is how a working page comes to look broken.
+   */
+  projectedTotalSec: number | null
+  /** True once this machine has actually been timed, rather than assumed. */
+  calibrated: boolean
+}
+
+/**
+ * How many seconds of audio this machine gets through per wall clock second,
+ * remembered between runs so the first estimate on the next video is not a
+ * guess. Written after every successful transcription.
+ */
+const SPEED_KEY = 'greenlight.speed'
+
+interface SpeedRecord {
+  webgpu?: number
+  wasm?: number
+}
+
+/**
+ * Conservative first guesses, used only until this machine has run once.
+ *
+ * Deliberately pessimistic. An estimate that turns out short is a pleasant
+ * surprise; one that turns out long is the tool lying to somebody who planned
+ * around it.
+ */
+const ASSUMED_SPEED: Record<WhisperDevice, number> = { webgpu: 2, wasm: 0.8 }
+
+/** Runs shorter than this do not update the speed. See writeSpeed's caller. */
+const CALIBRATION_MIN_SEC = 45
+
+function readSpeed(device: WhisperDevice): { speed: number; calibrated: boolean } {
+  if (typeof localStorage === 'undefined') return { speed: ASSUMED_SPEED[device], calibrated: false }
+  try {
+    const stored = JSON.parse(localStorage.getItem(SPEED_KEY) ?? '{}') as SpeedRecord
+    const value = stored[device]
+    return typeof value === 'number' && value > 0
+      ? { speed: value, calibrated: true }
+      : { speed: ASSUMED_SPEED[device], calibrated: false }
+  } catch {
+    return { speed: ASSUMED_SPEED[device], calibrated: false }
+  }
+}
+
+function writeSpeed(device: WhisperDevice, speed: number): void {
+  if (typeof localStorage === 'undefined' || !Number.isFinite(speed) || speed <= 0) return
+  try {
+    const stored = JSON.parse(localStorage.getItem(SPEED_KEY) ?? '{}') as SpeedRecord
+    // Averaged with the previous reading so one cold run does not swing it.
+    const previous = stored[device]
+    stored[device] = typeof previous === 'number' ? (previous + speed) / 2 : speed
+    localStorage.setItem(SPEED_KEY, JSON.stringify(stored))
+  } catch {
+    // A browser with storage disabled just gets the assumed speed next time.
+  }
 }
 
 export interface TranscriptionResult {
@@ -76,6 +142,8 @@ export async function transcribe(
         stage: 'model',
         ratio: null,
         note: 'This machine could not use the GPU path, so it is running on the CPU instead. Slower, same result.',
+        projectedTotalSec: null,
+        calibrated: false,
       })
       return await run(pcm, model, 'wasm', options)
     }
@@ -92,6 +160,10 @@ function run(
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./whisper.worker.ts', import.meta.url), { type: 'module' })
 
+    const duration = options.durationSec ?? 0
+    const { speed, calibrated } = readSpeed(device)
+    let startedAt = 0
+
     const finish = () => {
       worker.terminate()
       options.signal?.removeEventListener('abort', onAbort)
@@ -107,7 +179,31 @@ function run(
       const message = event.data
 
       if (message.type === 'progress') {
-        options.onProgress?.({ stage: message.stage, ratio: message.ratio, note: message.note })
+        if (message.stage !== 'transcribe') {
+          // Model download. It has a real ratio of its own and no bearing on
+          // how long the transcription will take.
+          options.onProgress?.({
+            stage: message.stage,
+            ratio: message.ratio,
+            note: message.note,
+            projectedTotalSec: null,
+            calibrated: false,
+          })
+          return
+        }
+
+        // The clock starts at the first sign of transcription, not when the
+        // worker was created, so a slow model download does not make the
+        // machine look slow.
+        if (startedAt === 0) startedAt = Date.now()
+
+        options.onProgress?.({
+          stage: 'transcribe',
+          ratio: null,
+          note: message.note,
+          projectedTotalSec: duration > 0 ? duration / speed : null,
+          calibrated,
+        })
         return
       }
 
@@ -118,6 +214,18 @@ function run(
       }
 
       finish()
+
+      // Remember how fast this machine actually was, so the next video opens
+      // with a real number instead of an assumption.
+      //
+      // Short clips are excluded. A ten second clip is mostly fixed startup
+      // cost, so timing one and calling the result a speed makes the machine
+      // look several times slower than it is, and every later estimate inherits
+      // that. Only runs long enough for the steady state to dominate count.
+      if (startedAt > 0 && duration >= CALIBRATION_MIN_SEC) {
+        writeSpeed(message.device, duration / ((Date.now() - startedAt) / 1000))
+      }
+
       const wordTimestamps = looksWordLevel(message.chunks)
       resolve({
         segments: chunksToSegments(message.chunks, wordTimestamps),

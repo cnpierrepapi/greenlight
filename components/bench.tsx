@@ -17,7 +17,7 @@
  * a stale URL is a 2GB leak.
  */
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { clearSegments, clearText } from '@/lib/engine'
 import type { ClearingResult } from '@/lib/engine/types'
 import { DecodeError, decodeToPcm, isProbablySupported } from '@/lib/media/decode'
@@ -26,7 +26,18 @@ import { Clearing, type MediaSource } from './clearing'
 
 type Stage =
   | { name: 'idle' }
-  | { name: 'working'; label: string; detail: string; ratio: number | null }
+  | {
+      name: 'working'
+      label: string
+      detail: string
+      ratio: number | null
+      /** Projected total for this stage, in seconds, or null if unknown. */
+      projectedTotalSec: number | null
+      /** When the stage began, so the display can count down from it. */
+      startedAt: number
+      /** True once this machine has been timed rather than assumed. */
+      calibrated: boolean
+    }
   | {
       name: 'done'
       result: ClearingResult
@@ -77,7 +88,7 @@ export function Bench() {
 
       try {
         if (SUBTITLE_EXTENSIONS.includes(extension)) {
-          setStage({ name: 'working', label: 'Reading the transcript', detail: file.name, ratio: null })
+          setStage({ name: 'working', label: 'Reading the transcript', detail: file.name, ratio: null, projectedTotalSec: null, startedAt: 0, calibrated: false })
           const text = await file.text()
           const result = clearText(file.name, text, { clearedAt })
           setStage({
@@ -98,7 +109,7 @@ export function Bench() {
           return
         }
 
-        setStage({ name: 'working', label: 'Reading the audio', detail: file.name, ratio: null })
+        setStage({ name: 'working', label: 'Reading the audio', detail: file.name, ratio: null, projectedTotalSec: null, startedAt: 0, calibrated: false })
         const { pcm, durationSec } = await decodeToPcm(file, (progress) => {
           setStage({
             name: 'working',
@@ -110,21 +121,33 @@ export function Bench() {
                   : 'Resampling to 16kHz',
             detail: file.name,
             ratio: progress.ratio,
+            projectedTotalSec: null,
+            startedAt: 0,
+            calibrated: false,
           })
         })
 
+        // One clock for the whole transcription, taken here rather than on
+        // every progress message, so the countdown does not restart each time
+        // the worker speaks.
+        const transcribeStartedAt = Date.now()
+
         const transcription = await transcribe(pcm, {
+          durationSec,
           onProgress: (progress) => {
             setStage({
               name: 'working',
               label: progress.stage === 'model' ? 'Loading the speech model' : 'Transcribing',
               detail: progress.note,
               ratio: progress.ratio,
+              projectedTotalSec: progress.projectedTotalSec,
+              startedAt: transcribeStartedAt,
+              calibrated: progress.calibrated,
             })
           },
         })
 
-        setStage({ name: 'working', label: 'Clearing', detail: 'Checking against the packs', ratio: null })
+        setStage({ name: 'working', label: 'Clearing', detail: 'Checking against the packs', ratio: null, projectedTotalSec: null, startedAt: 0, calibrated: false })
         const result = clearSegments(transcription.segments, 'whisper', { clearedAt, durationSec })
 
         mediaUrlRef.current = URL.createObjectURL(file)
@@ -159,7 +182,7 @@ export function Bench() {
   const runSample = useCallback(
     async (file: string) => {
       releaseMedia()
-      setStage({ name: 'working', label: 'Opening the sample', detail: file, ratio: null })
+      setStage({ name: 'working', label: 'Opening the sample', detail: file, ratio: null, projectedTotalSec: null, startedAt: 0, calibrated: false })
       try {
         const response = await fetch(`/samples/${file}`)
         if (!response.ok) throw new Error('That sample could not be loaded.')
@@ -268,18 +291,69 @@ export function Bench() {
   )
 }
 
+/**
+ * The waiting screen.
+ *
+ * The countdown ticks locally rather than waiting for the next message from the
+ * worker. Whisper reports once every thirty second window, so a display that
+ * only updated on those messages would sit frozen on the same number for half a
+ * minute at a time, which reads as a hang. The estimate arrives, and this
+ * counts down from it.
+ */
 function Working({ stage }: { stage: Extract<Stage, { name: 'working' }> }) {
+  const [now, setNow] = useState(() => Date.now())
+  const projected = stage.projectedTotalSec
+
+  useEffect(() => {
+    if (projected === null) return
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [projected, stage.startedAt])
+
+  const elapsed = projected === null ? 0 : Math.max(0, (now - stage.startedAt) / 1000)
+  const remaining = projected === null ? null : projected - elapsed
+  const overrun = remaining !== null && remaining <= 0
+
+  // The bar tracks the projection while it holds, then parks just short of full
+  // rather than completing, because a full bar over unfinished work is the
+  // thing that makes a page look hung.
+  const fill =
+    stage.ratio !== null
+      ? stage.ratio
+      : projected === null
+        ? null
+        : Math.min(0.97, elapsed / projected)
+
   return (
     <div className="working">
       <p className="drop-title">{stage.label}</p>
       <p className="drop-note">{stage.detail}</p>
+
       <div className="bar" aria-hidden="true">
         <span
-          className={stage.ratio === null ? 'bar-fill bar-indeterminate' : 'bar-fill'}
-          style={stage.ratio === null ? undefined : { width: `${Math.round(stage.ratio * 100)}%` }}
+          className={fill === null ? 'bar-fill bar-indeterminate' : 'bar-fill'}
+          style={fill === null ? undefined : { width: `${Math.round(fill * 100)}%` }}
         />
       </div>
+
+      <p className="eta gl-mono" aria-live="polite">
+        {projected === null
+          ? 'Working out how long this takes.'
+          : overrun
+            ? `Taking longer than expected. ${formatEta(elapsed)} so far, still going.`
+            : `About ${formatEta(remaining ?? 0)} left${stage.calibrated ? '' : ', first run on this machine so the estimate is rough'}`}
+      </p>
     </div>
   )
 }
+
+function formatEta(seconds: number): string {
+  const whole = Math.ceil(seconds)
+  if (whole < 60) return `${whole}s`
+  const minutes = Math.floor(whole / 60)
+  const rest = whole % 60
+  return rest === 0 ? `${minutes}m` : `${minutes}m ${String(rest).padStart(2, '0')}s`
+}
+
+
 

@@ -1,35 +1,51 @@
 'use client'
 
 /**
- * The bench: drop a cut in, watch it clear, read the verdicts.
+ * The drop zone and the state machine behind it.
  *
- * Contract: owns the whole client side state machine and is the only component
- * that calls into `lib/media` and `lib/engine`. Everything below it renders a
- * `ClearingResult` and nothing else.
+ * Contract: owns the whole client side flow and is the only component that
+ * calls into `lib/media` and `lib/engine`. Everything below it renders a
+ * `ClearingResult` and nothing else. Callers: `app/page.tsx`.
  *
- * The state machine is deliberately explicit rather than a set of booleans. A
- * creator dropping a 40 minute video waits through a model download and then a
- * transcription, and every one of those stages has to be able to say what it is
- * doing and what went wrong. Booleans lose that the first time two of them are
- * true at once.
+ * The state machine is explicit rather than a set of booleans. A creator
+ * dropping a 40 minute video waits through a model download and then a
+ * transcription, and each of those has to be able to say what it is doing and
+ * what went wrong. Booleans lose that the first time two of them are true.
+ *
+ * The dropped file is kept alive as an object URL so the player can seek back
+ * into it. It is revoked when another file arrives, because a 2GB video held by
+ * a stale URL is a 2GB leak.
  */
 
 import { useCallback, useRef, useState } from 'react'
 import { clearSegments, clearText } from '@/lib/engine'
-import type { ClearingResult, Finding, VerdictLevel } from '@/lib/engine/types'
+import type { ClearingResult } from '@/lib/engine/types'
 import { DecodeError, decodeToPcm, isProbablySupported } from '@/lib/media/decode'
 import { transcribe } from '@/lib/media/transcribe'
+import { Clearing, type MediaSource } from './clearing'
 
 type Stage =
   | { name: 'idle' }
   | { name: 'working'; label: string; detail: string; ratio: number | null }
-  | { name: 'done'; result: ClearingResult; note: string | null }
+  | { name: 'done'; result: ClearingResult; media: MediaSource | null; note: string | null }
   | { name: 'error'; message: string }
 
 const SAMPLES = [
-  { file: 'gaming-patch-rant.srt', title: 'Gaming, patch rant', note: '13 min. Language in the opening line, and game violence that should not count.' },
-  { file: 'true-crime-hollow-lane.srt', title: 'True crime, narration', note: '15 min. A coroner passage that three platforms judge differently.' },
-  { file: 'studio-tour-clean.srt', title: 'Studio tour', note: '7 min. Clean. Proves a green result is a real answer.' },
+  {
+    file: 'gaming-patch-rant.srt',
+    title: 'Gaming, patch rant',
+    note: 'Language in the opening line, and game violence that should not count against anybody.',
+  },
+  {
+    file: 'true-crime-hollow-lane.srt',
+    title: 'True crime, narration',
+    note: 'A coroner passage that Instagram limits and YouTube clears. Same cut, different answers.',
+  },
+  {
+    file: 'studio-tour-clean.srt',
+    title: 'Studio tour',
+    note: 'Clean all the way through, which proves a green result is an answer and not a shrug.',
+  },
 ]
 
 const SUBTITLE_EXTENSIONS = ['srt', 'vtt', 'json', 'txt']
@@ -38,89 +54,131 @@ export function Bench() {
   const [stage, setStage] = useState<Stage>({ name: 'idle' })
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const mediaUrlRef = useRef<string | null>(null)
 
-  const runFile = useCallback(async (file: File) => {
-    const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
-    const clearedAt = new Date().toISOString()
+  const releaseMedia = useCallback(() => {
+    if (mediaUrlRef.current) {
+      URL.revokeObjectURL(mediaUrlRef.current)
+      mediaUrlRef.current = null
+    }
+  }, [])
 
-    try {
-      if (SUBTITLE_EXTENSIONS.includes(extension)) {
-        setStage({ name: 'working', label: 'Reading the transcript', detail: file.name, ratio: null })
-        const text = await file.text()
-        const result = clearText(file.name, text, { clearedAt })
-        setStage({ name: 'done', result, note: null })
-        return
-      }
+  const runFile = useCallback(
+    async (file: File) => {
+      releaseMedia()
+      const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+      const clearedAt = new Date().toISOString()
 
-      if (!isProbablySupported(file.name)) {
-        setStage({
-          name: 'error',
-          message: `Greenlight cannot open ${extension ? `.${extension} files` : 'that file'}. Drop an MP4, MOV, MP3 or WAV, or a subtitle file.`,
-        })
-        return
-      }
+      try {
+        if (SUBTITLE_EXTENSIONS.includes(extension)) {
+          setStage({ name: 'working', label: 'Reading the transcript', detail: file.name, ratio: null })
+          const text = await file.text()
+          const result = clearText(file.name, text, { clearedAt })
+          setStage({
+            name: 'done',
+            result,
+            media: null,
+            note: 'Cleared from a subtitle file, so timecodes are accurate to the line. Drop the video in for word level timings.',
+          })
+          return
+        }
 
-      setStage({ name: 'working', label: 'Reading the audio', detail: file.name, ratio: null })
-      const { pcm, durationSec } = await decodeToPcm(file, (progress) => {
-        setStage({
-          name: 'working',
-          label: progress.stage === 'reading' ? 'Reading the file' : progress.stage === 'decoding' ? 'Decoding the audio' : 'Resampling',
-          detail: file.name,
-          ratio: progress.ratio,
-        })
-      })
+        if (!isProbablySupported(file.name)) {
+          setStage({
+            name: 'error',
+            message: `Greenlight cannot open ${extension ? `.${extension} files` : 'that file'}. Drop an MP4, MOV, MP3 or WAV, or a subtitle file.`,
+          })
+          return
+        }
 
-      const transcription = await transcribe(pcm, {
-        onProgress: (progress) => {
+        setStage({ name: 'working', label: 'Reading the audio', detail: file.name, ratio: null })
+        const { pcm, durationSec } = await decodeToPcm(file, (progress) => {
           setStage({
             name: 'working',
-            label: progress.stage === 'model' ? 'Loading the speech model' : 'Transcribing',
-            detail: progress.note,
+            label:
+              progress.stage === 'reading'
+                ? 'Reading the file'
+                : progress.stage === 'decoding'
+                  ? 'Decoding the audio'
+                  : 'Resampling to 16kHz',
+            detail: file.name,
             ratio: progress.ratio,
           })
-        },
-      })
+        })
 
-      setStage({ name: 'working', label: 'Clearing', detail: 'Checking against the packs', ratio: null })
-      const result = clearSegments(transcription.segments, 'whisper', { clearedAt, durationSec })
+        const transcription = await transcribe(pcm, {
+          onProgress: (progress) => {
+            setStage({
+              name: 'working',
+              label: progress.stage === 'model' ? 'Loading the speech model' : 'Transcribing',
+              detail: progress.note,
+              ratio: progress.ratio,
+            })
+          },
+        })
 
-      setStage({
-        name: 'done',
-        result,
-        note: transcription.wordTimestamps
-          ? `Transcribed on this machine, ${transcription.device === 'webgpu' ? 'GPU' : 'CPU'}, with per word timings.`
-          : `Transcribed on this machine, ${transcription.device === 'webgpu' ? 'GPU' : 'CPU'}. This model returned timings per line rather than per word, so timecodes are accurate to the line.`,
-      })
-    } catch (error) {
-      setStage({
-        name: 'error',
-        message:
-          error instanceof DecodeError
-            ? error.message
-            : error instanceof Error
+        setStage({ name: 'working', label: 'Clearing', detail: 'Checking against the packs', ratio: null })
+        const result = clearSegments(transcription.segments, 'whisper', { clearedAt, durationSec })
+
+        mediaUrlRef.current = URL.createObjectURL(file)
+        const where = transcription.device === 'webgpu' ? 'GPU' : 'CPU'
+
+        setStage({
+          name: 'done',
+          result,
+          media: {
+            url: mediaUrlRef.current,
+            kind: file.type.startsWith('video/') ? 'video' : 'audio',
+            name: file.name,
+          },
+          note: transcription.wordTimestamps
+            ? `Transcribed on this machine on the ${where}, with per word timings. Nothing was uploaded.`
+            : `Transcribed on this machine on the ${where}. This model returned timings per line rather than per word, so timecodes are accurate to the line. Nothing was uploaded.`,
+        })
+      } catch (error) {
+        setStage({
+          name: 'error',
+          message:
+            error instanceof DecodeError || error instanceof Error
               ? error.message
               : 'Something failed that Greenlight could not name. Try a subtitle file.',
-      })
-    }
-  }, [])
+        })
+      }
+    },
+    [releaseMedia]
+  )
 
-  const runSample = useCallback(async (file: string) => {
-    setStage({ name: 'working', label: 'Opening the sample', detail: file, ratio: null })
-    try {
-      const response = await fetch(`/samples/${file}`)
-      if (!response.ok) throw new Error('That sample could not be loaded.')
-      const text = await response.text()
-      const result = clearText(file, text, { clearedAt: new Date().toISOString() })
-      setStage({ name: 'done', result, note: 'Sample cut, cleared from its subtitle file.' })
-    } catch (error) {
-      setStage({ name: 'error', message: error instanceof Error ? error.message : 'That sample could not be loaded.' })
-    }
-  }, [])
+  const runSample = useCallback(
+    async (file: string) => {
+      releaseMedia()
+      setStage({ name: 'working', label: 'Opening the sample', detail: file, ratio: null })
+      try {
+        const response = await fetch(`/samples/${file}`)
+        if (!response.ok) throw new Error('That sample could not be loaded.')
+        const text = await response.text()
+        const result = clearText(file, text, { clearedAt: new Date().toISOString() })
+        setStage({
+          name: 'done',
+          result,
+          media: null,
+          note: 'Sample cut, cleared from its subtitle file. Drop your own video in to see the word level path.',
+        })
+      } catch (error) {
+        setStage({
+          name: 'error',
+          message: error instanceof Error ? error.message : 'That sample could not be loaded.',
+        })
+      }
+    },
+    [releaseMedia]
+  )
+
+  const compact = stage.name === 'done'
 
   return (
     <div className="bench">
       <section
-        className={`drop ${dragging ? 'drop-active' : ''}`}
+        className={`drop ${dragging ? 'drop-active' : ''} ${compact ? 'drop-compact' : ''}`}
         onDragOver={(event) => {
           event.preventDefault()
           setDragging(true)
@@ -133,9 +191,6 @@ export function Bench() {
           if (file) void runFile(file)
         }}
       >
-        {/* Visually hidden rather than `hidden`, which would take it out of the
-            accessibility tree and leave keyboard and screen reader users with a
-            button that opens nothing. */}
         <input
           ref={inputRef}
           id="cut-file"
@@ -153,10 +208,13 @@ export function Bench() {
           <Working stage={stage} />
         ) : (
           <>
-            <p className="drop-title">Drop the cut in</p>
-            <p className="drop-note">
-              MP4, MOV, MP3, WAV, or a subtitle file. Video is transcribed here in your browser and never uploaded.
-            </p>
+            <p className="drop-title">{compact ? 'Clear another cut' : 'Drop the cut in'}</p>
+            {!compact && (
+              <p className="drop-note">
+                MP4, MOV, MP3, WAV, or a subtitle file. Video is transcribed here in your browser and never
+                uploaded.
+              </p>
+            )}
             <button type="button" className="drop-button" onClick={() => inputRef.current?.click()}>
               Choose a file
             </button>
@@ -170,19 +228,26 @@ export function Bench() {
         </p>
       )}
 
-      <section className="samples">
-        <p className="gl-label">Or open a sample cut</p>
-        <div className="sample-row">
-          {SAMPLES.map((sample) => (
-            <button key={sample.file} type="button" className="sample" onClick={() => void runSample(sample.file)}>
-              <span className="sample-title">{sample.title}</span>
-              <span className="sample-note">{sample.note}</span>
-            </button>
-          ))}
-        </div>
-      </section>
+      {!compact && (
+        <section className="samples">
+          <p className="gl-label">Or open a sample cut</p>
+          <div className="sample-row">
+            {SAMPLES.map((sample) => (
+              <button
+                key={sample.file}
+                type="button"
+                className="sample"
+                onClick={() => void runSample(sample.file)}
+              >
+                <span className="sample-title">{sample.title}</span>
+                <span className="sample-note">{sample.note}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {stage.name === 'done' && <Result result={stage.result} note={stage.note} />}
+      {stage.name === 'done' && <Clearing result={stage.result} media={stage.media} note={stage.note} />}
     </div>
   )
 }
@@ -200,101 +265,4 @@ function Working({ stage }: { stage: Extract<Stage, { name: 'working' }> }) {
       </div>
     </div>
   )
-}
-
-function Result({ result, note }: { result: ClearingResult; note: string | null }) {
-  const duration = result.transcript.durationSec
-
-  return (
-    <section className="result">
-      <div className="verdicts">
-        {result.platforms.map((platform) => (
-          <article key={platform.packId} className={`verdict level-${platform.level}`}>
-            <header>
-              <span className="verdict-name">{platform.packLabel}</span>
-              <span className="stamp">{label(platform.level)}</span>
-            </header>
-            <ul>
-              {platform.categories
-                .filter((category) => category.level !== 'cleared')
-                .map((category) => (
-                  <li key={category.categoryId}>
-                    <span className={`dot dot-${category.level}`} aria-hidden="true" />
-                    <span>
-                      <strong>{category.label}.</strong> {category.reason}
-                    </span>
-                  </li>
-                ))}
-              {platform.categories.every((category) => category.level === 'cleared') && (
-                <li className="all-clear">Nothing above the threshold in any category.</li>
-              )}
-            </ul>
-          </article>
-        ))}
-      </div>
-
-      <div className="findings">
-        <p className="gl-label">
-          {result.findings.length} finding{result.findings.length === 1 ? '' : 's'}
-          {duration ? ` across ${formatTime(duration)}` : ''}
-          {result.considered.length > 0 ? `, ${result.considered.length} considered and cleared` : ''}
-        </p>
-
-        {result.findings.map((finding) => (
-          <FindingRow key={finding.id} finding={finding} />
-        ))}
-
-        {result.considered.length > 0 && (
-          <details className="considered">
-            <summary>Considered and cleared</summary>
-            {result.considered.map((finding) => (
-              <FindingRow key={finding.id} finding={finding} muted />
-            ))}
-          </details>
-        )}
-
-        {note && <p className="note">{note}</p>}
-        <p className="note">
-          Cleared against the packs as published on their retrieval dates. Greenlight reads published platform
-          policy. It does not speak for any platform, it is not legal advice, and it cannot guarantee
-          monetization.
-        </p>
-      </div>
-    </section>
-  )
-}
-
-function FindingRow({ finding, muted = false }: { finding: Finding; muted?: boolean }) {
-  return (
-    <article className={`finding ${muted ? 'finding-muted' : ''}`}>
-      <div className="finding-time gl-mono">
-        {finding.startSec === null ? 'no time' : formatTime(finding.startSec)}
-      </div>
-      <div className="finding-body">
-        <p className="finding-quote">{finding.quote}</p>
-        <p className="finding-meta gl-mono">
-          {finding.class} · severity {finding.severity} · confidence {finding.confidence.toFixed(2)}
-        </p>
-        <ul className="finding-why">
-          {finding.modifiers.map((modifier) => (
-            <li key={modifier.id}>{modifier.note}</li>
-          ))}
-        </ul>
-      </div>
-    </article>
-  )
-}
-
-function label(level: VerdictLevel): string {
-  if (level === 'cleared') return 'Cleared'
-  if (level === 'limited') return 'Limited'
-  return 'Strike risk'
-}
-
-export function formatTime(seconds: number): string {
-  const whole = Math.floor(seconds)
-  const minutes = Math.floor(whole / 60)
-  const rest = whole % 60
-  const tenths = Math.floor((seconds - whole) * 10)
-  return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}.${tenths}`
 }

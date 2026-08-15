@@ -38,7 +38,7 @@ export function Verdicts({ result, onSelect }: VerdictsProps) {
 
             {flagged.length === 0 ? (
               <p className="all-clear">
-                Nothing above the threshold in any of the {platform.categories.length} categories.
+                Nothing over the line in any of the {platform.categories.length} categories.
               </p>
             ) : (
               <ul>

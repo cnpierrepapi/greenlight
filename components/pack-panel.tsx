@@ -75,7 +75,7 @@ export function PackPanel({ result, sourceName, mediaName }: PackPanelProps) {
     <section className="pack" aria-label="The pack">
       <header className="pack-head">
         <span className="gl-label">The pack</span>
-        <span className="pack-note">Everything below is written from this video, not from a template.</span>
+        <span className="pack-note">Written from this video. Not a template with your numbers in it.</span>
       </header>
 
       <div className="pack-grid">
@@ -97,10 +97,10 @@ export function PackPanel({ result, sourceName, mediaName }: PackPanelProps) {
         {open && (
           <div className="appeal-form">
             <p className="doc-blurb">
-              A brief only makes sense once a decision exists. Tell Greenlight what happened and it will
-              argue from this video&apos;s own findings. If the evidence supports the platform, the brief
-              says so and asks for the timecodes instead, because a confident appeal against a fair
-              decision is how a creator gets ignored.
+              A brief only makes sense once a decision exists. Tell Greenlight what happened and it argues
+              from this video&apos;s own findings. If your footage backs up the platform, it says so and
+              asks for the timecodes instead. A confident appeal against a fair call is how you stop
+              getting read.
             </p>
 
             <div className="field-row">

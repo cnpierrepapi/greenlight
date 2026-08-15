@@ -41,8 +41,7 @@ export function Findings({ result, selectedId, onSelect }: FindingsProps) {
 
       {result.findings.length === 0 && (
         <p className="nothing">
-          Nothing above the threshold. This cut is clear on every pack, against the guidelines as published
-          on their retrieval dates.
+          Nothing over the line. This cut is clear on every pack, against the rules as they were published.
         </p>
       )}
 
@@ -74,8 +73,8 @@ export function Findings({ result, selectedId, onSelect }: FindingsProps) {
         <details className="considered">
           <summary>{result.considered.length} considered and cleared</summary>
           <p className="considered-note">
-            Greenlight found these and decided they do not count. They stay on file because they are the
-            evidence that the video was reviewed, and they are what an appeal argues from.
+            Greenlight caught these and let them go. They stay on the record anyway. That record is what an
+            appeal argues from later.
           </p>
           {result.considered.map((finding) => (
             <article key={finding.id} className="passage passage-muted">

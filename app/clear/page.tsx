@@ -25,8 +25,8 @@ export default function ClearPage() {
         </Link>
 
         <p className="app-strap">
-          Drop a cut in. It gets transcribed on this machine, checked against what YouTube, TikTok and
-          Instagram publish, and handed back as timecodes you can act on. Nothing is uploaded.
+          Drop a cut in. It gets transcribed right here in this tab, checked against what YouTube, TikTok
+          and Instagram actually publish, and handed back as timecodes. Nothing leaves your machine.
         </p>
       </header>
 

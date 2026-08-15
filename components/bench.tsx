@@ -51,17 +51,17 @@ const SAMPLES = [
   {
     file: 'gaming-patch-rant.srt',
     title: 'Gaming, patch rant',
-    note: 'Language in the opening line, and game violence that should not count against anybody.',
+    note: 'Swearing in the opening line. Plus game violence, which should not count against anybody.',
   },
   {
     file: 'true-crime-hollow-lane.srt',
     title: 'True crime, narration',
-    note: 'A coroner passage that Instagram limits and YouTube clears. Same cut, different answers.',
+    note: 'One coroner passage. Instagram limits it, YouTube waves it through.',
   },
   {
     file: 'studio-tour-clean.srt',
     title: 'Studio tour',
-    note: 'Clean all the way through, which proves a green result is an answer and not a shrug.',
+    note: 'Clean the whole way. Green here means green, not that nobody looked.',
   },
 ]
 
@@ -96,7 +96,7 @@ export function Bench() {
             result,
             media: null,
             sourceName: file.name,
-            note: 'Cleared from a subtitle file, so timecodes are accurate to the line. Drop the video in for word level timings.',
+            note: 'Read from a subtitle file, so the timecodes land on the line rather than the word. Drop the video in if you want them exact.',
           })
           return
         }
@@ -104,7 +104,7 @@ export function Bench() {
         if (!isProbablySupported(file.name)) {
           setStage({
             name: 'error',
-            message: `Greenlight cannot open ${extension ? `.${extension} files` : 'that file'}. Drop an MP4, MOV, MP3 or WAV, or a subtitle file.`,
+            message: `Greenlight cannot open ${extension ? `.${extension} files` : 'that file'}. Try an MP4, MOV, MP3 or WAV. Or drop your subtitle file instead.`,
           })
           return
         }
@@ -163,8 +163,8 @@ export function Bench() {
           },
           sourceName: file.name,
           note: transcription.wordTimestamps
-            ? `Transcribed on this machine on the ${where}, with per word timings. Nothing was uploaded.`
-            : `Transcribed on this machine on the ${where}. This model returned timings per line rather than per word, so timecodes are accurate to the line. Nothing was uploaded.`,
+            ? `Transcribed here on your ${where}, word by word. Nothing left the machine.`
+            : `Transcribed here on your ${where}. This model timed the lines rather than the words, so the timecodes land on the line. Nothing left the machine.`,
         })
       } catch (error) {
         setStage({
@@ -172,7 +172,7 @@ export function Bench() {
           message:
             error instanceof DecodeError || error instanceof Error
               ? error.message
-              : 'Something failed that Greenlight could not name. Try a subtitle file.',
+              : 'Something went wrong that Greenlight could not name. Try a subtitle file.',
         })
       }
     },
@@ -193,7 +193,7 @@ export function Bench() {
           result,
           media: null,
           sourceName: file,
-          note: 'Sample cut, cleared from its subtitle file. Drop your own video in to see the word level path.',
+          note: 'Sample cut, read from its subtitle file. Drop one of your own in for the real thing.',
         })
       } catch (error) {
         setStage({
@@ -243,8 +243,8 @@ export function Bench() {
             <p className="drop-title">{compact ? 'Clear another cut' : 'Drop the cut in'}</p>
             {!compact && (
               <p className="drop-note">
-                MP4, MOV, MP3, WAV, or a subtitle file. Video is transcribed here in your browser and never
-                uploaded.
+                MP4, MOV, MP3, WAV, or a subtitle file. All of it happens in this tab. Nothing leaves your
+                machine.
               </p>
             )}
             <button type="button" className="drop-button" onClick={() => inputRef.current?.click()}>
@@ -340,8 +340,8 @@ function Working({ stage }: { stage: Extract<Stage, { name: 'working' }> }) {
         {projected === null
           ? 'Working out how long this takes.'
           : overrun
-            ? `Taking longer than expected. ${formatEta(elapsed)} so far, still going.`
-            : `About ${formatEta(remaining ?? 0)} left${stage.calibrated ? '' : ', first run on this machine so the estimate is rough'}`}
+            ? `Running long. ${formatEta(elapsed)} in, still going.`
+            : `About ${formatEta(remaining ?? 0)} left${stage.calibrated ? '' : '. First run here, so take that loosely'}`}
       </p>
     </div>
   )
@@ -354,6 +354,7 @@ function formatEta(seconds: number): string {
   const rest = whole % 60
   return rest === 0 ? `${minutes}m` : `${minutes}m ${String(rest).padStart(2, '0')}s`
 }
+
 
 
 

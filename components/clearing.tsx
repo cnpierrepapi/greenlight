@@ -120,10 +120,12 @@ export function Clearing({ result, media, note, sourceName }: ClearingProps) {
       <footer className="clearing-foot">
         {note && <p className="note">{note}</p>}
         <p className="note">
-          Packs read on {[...new Set(result.platforms.map((p) => p.packVersion))].join(', ')} · engine{' '}
-          {result.engineVersion}. Greenlight reads published platform policy. It does not speak for any
-          platform, it is not legal advice, and it cannot guarantee monetization. The platform makes the
-          call.
+          Greenlight reads what the platforms publish. It does not speak for them, it is not legal advice,
+          and it cannot promise you get paid. They still make the call.
+        </p>
+        <p className="note gl-mono">
+          packs {[...new Set(result.platforms.map((p) => p.packVersion))].join(', ')} · engine{' '}
+          {result.engineVersion}
         </p>
       </footer>
     </div>

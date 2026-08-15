@@ -41,25 +41,25 @@ export function buildPack(result: ClearingResult, options: PackOptions = {}): Do
       filename: `${slug}-report.html`,
       mime: 'text/html',
       contents: renderReport(result),
-      blurb: 'Every finding with its timecode, the rule it trips, and what was cleared. Opens offline.',
+      blurb: 'Every finding, its timecode, and the rule it trips. Opens with no internet.',
     },
     {
       filename: `${slug}-cutlist.sh`,
       mime: 'text/x-shellscript',
       contents: renderFfmpeg(result, options),
-      blurb: 'A runnable ffmpeg command that mutes the flagged ranges and copies the video untouched.',
+      blurb: 'Run this and the flagged seconds go silent. The picture is copied, not re-encoded.',
     },
     {
       filename: `${slug}-cutlist.edl`,
       mime: 'text/plain',
       contents: renderEdl(result, options),
-      blurb: 'The same ranges as a CMX3600 EDL, for a trim in Premiere or Resolve rather than a mute.',
+      blurb: 'Same ranges for Premiere or Resolve, if you would rather cut them out than mute them.',
     },
     {
       filename: `${slug}-selfcert.md`,
       mime: 'text/markdown',
       contents: renderSelfCert(result),
-      blurb: 'The advertiser questionnaire, answered from the transcript, with the timecodes behind each answer.',
+      blurb: 'The advertiser questionnaire, already answered, with the timecode behind each answer.',
     },
   ]
 }
@@ -84,7 +84,7 @@ export function buildAppeal(
     filename: `${slug}-appeal-${context.packId}.md`,
     mime: 'text/markdown',
     contents: renderAppeal(result, pack, context),
-    blurb: 'A filed response with numbered exhibits from this video, ready to paste into the appeal form.',
+    blurb: 'A filed response with numbered exhibits from your own footage, ready to paste into the form.',
   }
 }
 

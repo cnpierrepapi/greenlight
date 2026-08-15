@@ -211,7 +211,12 @@ export function judge(hit: LexiconHit, transcript: Transcript, index: ContextInd
       effect: 'raise',
       deltaSeverity: 0,
       deltaConfidence: 0,
-      note: `This falls inside the opening ${index.openingSec} seconds, where platforms judge language more harshly than they do later in a video.`,
+      // "content" rather than "language". The opening window rule exists on
+      // the language category today, but this modifier is attached to every
+      // class, so a violence finding at 00:02 was being explained with a
+      // sentence about language. Caught by running a real clip through the
+      // live site.
+      note: `This falls inside the opening ${index.openingSec} seconds, where platforms judge content more harshly than they do later in a video.`,
     })
   }
 

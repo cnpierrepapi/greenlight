@@ -1,5 +1,7 @@
 # Greenlight
 
+**Live: https://greenlight.onenept.com**
+
 A monetization check for a cut you have already made.
 
 Drop a finished video in. Greenlight transcribes it in your own browser, finds the
@@ -13,9 +15,31 @@ No account, no API key, no upload. The video file never leaves your machine.
 Greenlight reads published platform policy. It does not speak for any platform, it is
 not legal advice, and it cannot guarantee monetization. The platform makes the call.
 
-## Status
+## What you get back
 
-Under construction. Phase 0 complete: scaffold, data contract, fixtures, docs.
+Four documents, all written from your video's own findings rather than from a template.
+
+| File | What it is |
+| --- | --- |
+| `report.html` | Every finding with its timecode, the published rule it trips, and what was considered and cleared. No scripts and no webfonts, so it opens from a folder with no network. |
+| `cutlist.sh` | A runnable ffmpeg command that mutes the flagged ranges and copies the video stream untouched. |
+| `cutlist.edl` | The same ranges as a CMX3600 EDL of what survives a trim, for Premiere or Resolve. |
+| `selfcert.md` | The advertiser questionnaire answered from the transcript, with the timecodes behind each answer. |
+| `appeal.md` | Generated only once a decision exists. Numbered exhibits from your video, quoted, with a stated remedy. |
+
+Three rules hold across all of them.
+
+The cut list only touches findings a platform actually counted. A finding nobody
+counted is real, is in the report, and is not worth editing a video over.
+
+The self-certification leaves the questions about imagery unanswered. Greenlight reads
+what is said, never what is shown, and a wrong self-cert answer costs a creator more
+than a missing one.
+
+And the appeal brief will not argue a losing point. When your video's own evidence
+supports the platform's decision, the brief says so and asks for the timecodes relied
+upon so a conforming edit can be prepared, instead of arguing a case that would get you
+ignored.
 
 ## Running it
 

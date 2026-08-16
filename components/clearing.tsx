@@ -25,6 +25,20 @@ import { Verdicts } from './verdicts'
 import { TranscriptRail } from './transcript-rail'
 import { Findings } from './findings'
 import { PackPanel } from './pack-panel'
+import { POLICY_WATCH } from '@/lib/engine/policy/generated/packs'
+
+/**
+ * One line about how fresh the packs are. It reports what the watcher actually
+ * managed, not what we wish it managed: if a platform blocks automated reads,
+ * the count says so instead of implying all three were verified.
+ */
+function policyWatchLine(w: NonNullable<typeof POLICY_WATCH>): string {
+  const day = w.lastChecked.slice(0, 10)
+  if (w.drifted.length > 0) return `policy pages moved ${day}, packs not yet reconciled`
+  if (w.checkedOk === 0) return `policy check ${day} reached nothing`
+  const scope = w.checkedOk === w.total ? 'all sources' : `${w.checkedOk}/${w.total} sources`
+  return `policies checked ${day}, ${scope}`
+}
 
 export interface MediaSource {
   url: string
@@ -126,6 +140,7 @@ export function Clearing({ result, media, note, sourceName }: ClearingProps) {
         <p className="note gl-mono">
           packs {[...new Set(result.platforms.map((p) => p.packVersion))].join(', ')} · engine{' '}
           {result.engineVersion}
+          {POLICY_WATCH && ` · ${policyWatchLine(POLICY_WATCH)}`}
         </p>
       </footer>
     </div>

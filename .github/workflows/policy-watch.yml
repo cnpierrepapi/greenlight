@@ -1,0 +1,93 @@
+name: Policy watch
+
+# The packs in packs/*.yaml are written from published platform policy pages.
+# This checks every morning whether any of those pages has moved since somebody
+# last read it. It does not edit a pack: a change is a prompt for a human to
+# read the diff and decide what it means for the thresholds.
+
+on:
+  schedule:
+    # 06:12 UTC daily. Off the hour on purpose, scheduled runs bunch up on it.
+    - cron: '12 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check the policy pages
+        id: check
+        run: node scripts/watch-policies.mjs | tee watch.log
+        continue-on-error: true
+
+      # Always commit the state file. Even a run where nothing moved records a
+      # fresh lastChecked, which is what the app footer shows creators.
+      - name: Record the check
+        run: |
+          if git diff --quiet packs/policy-watch.json; then
+            echo "no change to the watch state"
+            exit 0
+          fi
+          git config user.name "greenlight-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add packs/policy-watch.json
+          git commit -m "chore(packs): record policy check $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Open an issue if a policy moved
+        if: steps.check.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const log = fs.readFileSync('watch.log', 'utf8')
+            const title = 'Policy page changed since the pack was written'
+            const body = [
+              'The scheduled policy check found at least one source page that no longer matches',
+              'the text its pack was written from.',
+              '',
+              '```',
+              log.trim(),
+              '```',
+              '',
+              'Read the page, decide whether any threshold actually changes, bump `retrieved`',
+              'and `version` in the YAML, then run `node scripts/watch-policies.mjs --adopt`',
+              'and commit the new baseline.',
+            ].join('\n')
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'policy-drift',
+            })
+
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              })
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['policy-drift'],
+              })
+            }

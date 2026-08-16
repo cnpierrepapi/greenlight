@@ -11,7 +11,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "policies": "node scripts/watch-policies.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",

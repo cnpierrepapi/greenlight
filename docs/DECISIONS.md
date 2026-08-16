@@ -382,3 +382,40 @@ brief is materially worse without it.
 
 **Cost.** One more click at the moment a creator is most annoyed. That is the right
 moment to slow down.
+
+---
+
+## D18. The policy watcher reports drift, it never rewrites a pack
+
+**Context.** Every pack in `packs/` is written from a published platform policy page
+and records `source_url` and `retrieved`. Those pages move. A creator who runs
+Greenlight in November against thresholds read in August has no way to know that.
+
+**Choice.** `scripts/watch-policies.mjs` runs on a daily schedule
+(`.github/workflows/policy-watch.yml`), fetches each `source_url`, reduces it to
+visible text, hashes it, and compares against the baseline in
+`packs/policy-watch.json`. Drift exits non-zero, which files an issue. The script
+never edits a pack. Reconciliation is a human reading the diff, deciding whether a
+threshold actually changes, bumping `retrieved` and `version`, then running
+`--adopt` to move the baseline.
+
+**Why.** The tempting version ingests the page and updates the rules. That would move
+verdicts without anybody checking, which is the one failure this product cannot have:
+the whole claim is that every verdict traces to a line of YAML somebody wrote on
+purpose. A watcher that only ever says "go and look" keeps that true.
+
+**What it actually covers.** One source of three today. YouTube's page reads fine.
+Instagram returns HTTP 400 to a plain request, and TikTok's page is client rendered,
+so a fetch gets 58 characters of text and 5 MB of bundle. Both are recorded with the
+reason and counted as unchecked. The footer says `1/3 sources`, not `all sources`,
+because claiming otherwise would be the product lying in exactly the register it was
+built to fix.
+
+**The false positive we accept.** The comparison is over the whole page, so a nav
+rewrite counts as a change. That is the right way round: a check that misses a real
+policy change is much worse than one that occasionally asks a human to look.
+
+**Cost, paid once already.** Google's Help Center stamps a fresh request id into the
+page chrome on every response, so the first version reported drift on its own second
+run. Long digit runs and long mixed alphanumeric tokens are now blanked before
+hashing, pinned by `tests/watch-policies.test.ts`.

@@ -447,3 +447,26 @@ export const PACKS: Pack[] = [
 ]
 
 export const PACK_IDS = ["instagram","tiktok","youtube"] as const
+
+/**
+ * When the platform pages behind these packs were last fetched and compared.
+ * null when the watcher has not run. checkedOk is how many of total sources
+ * actually answered: the rest are named in blocked, and claiming they were
+ * checked would be a lie the footer would repeat to every creator.
+ */
+export const POLICY_WATCH: {
+  lastChecked: string
+  checkedOk: number
+  total: number
+  drifted: string[]
+  blocked: string[]
+} | null = {
+  "lastChecked": "2026-08-16T09:48:20.731Z",
+  "checkedOk": 1,
+  "total": 3,
+  "drifted": [],
+  "blocked": [
+    "instagram",
+    "tiktok"
+  ]
+}

@@ -1,16 +1,16 @@
 {
-  "lastChecked": "2026-08-21T07:03:48.368Z",
+  "lastChecked": "2026-08-22T06:56:05.950Z",
   "checkedOk": 1,
   "total": 3,
   "sources": {
     "instagram": {
       "url": "https://creators.instagram.com/earn-money/content-monetization-policies",
-      "lastAttempt": "2026-08-21T07:03:48.368Z",
+      "lastAttempt": "2026-08-22T06:56:05.950Z",
       "lastError": "HTTP 400"
     },
     "tiktok": {
       "url": "https://www.tiktok.com/community-guidelines/en/content-moderation",
-      "lastAttempt": "2026-08-21T07:03:48.368Z",
+      "lastAttempt": "2026-08-22T06:56:05.950Z",
       "lastError": "only 58 chars of text, probably a challenge page"
     },
     "youtube": {
@@ -19,8 +19,8 @@
       "chars": 84826,
       "packVersion": "0.1.0",
       "packRetrieved": "2026-08-14",
-      "lastAttempt": "2026-08-21T07:03:48.368Z",
-      "lastSeenUnchanged": "2026-08-21T07:03:48.368Z",
+      "lastAttempt": "2026-08-22T06:56:05.950Z",
+      "lastSeenUnchanged": "2026-08-22T06:56:05.950Z",
       "lastError": null,
       "baselineSetAt": "2026-08-16T09:48:15.942Z"
     }
